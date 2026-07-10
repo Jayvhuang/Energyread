@@ -147,21 +147,25 @@ let quoteIndexMap = {};
 
 // 一次性把默认语句同步到云端
 async function seedDefaultQuotesIfEmpty() {
-    const { data, error } = await sb
+    const { count, error } = await sb
         .from('quotes')
-        .select('id', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true });
     if (error) {
         console.warn('检查语句库失败', error);
         return;
     }
-    if (data && data.length > 0) return;
+    if (count && count > 0) return;
 
+    // 分批插入，避免超出限制
+    const batchSize = 50;
     const rows = DEFAULT_QUOTES.map(text => ({ text }));
-    const { error: insertError } = await sb
-        .from('quotes')
-        .insert(rows);
-    if (insertError) {
-        console.warn('初始化默认语句失败', insertError);
+    for (let i = 0; i < rows.length; i += batchSize) {
+        const batch = rows.slice(i, i + batchSize);
+        const { error: insertError } = await sb.from('quotes').insert(batch);
+        if (insertError) {
+            console.warn('初始化默认语句失败', insertError);
+            return;
+        }
     }
 }
 
@@ -175,17 +179,25 @@ async function loadQuotes() {
     if (error) {
         console.warn('加载云端语句库失败，使用本地缓存', error);
         const saved = getData(STORAGE_KEYS.QUOTES, null);
-        if (Array.isArray(saved) && saved.length > 0) quotes = saved;
+        if (Array.isArray(saved) && saved.length > 0) {
+            quotes = saved;
+        } else {
+            quotes = [...DEFAULT_QUOTES];
+        }
         return;
     }
-    quotes = data.map(q => q.text);
-    quoteIdMap = {};
-    quoteIndexMap = {};
-    data.forEach((q, i) => {
-        quoteIdMap[i] = q.id;
-        quoteIndexMap[q.id] = i;
-    });
-    setData(STORAGE_KEYS.QUOTES, quotes);
+    if (data && data.length > 0) {
+        quotes = data.map(q => q.text);
+        quoteIdMap = {};
+        quoteIndexMap = {};
+        data.forEach((q, i) => {
+            quoteIdMap[i] = q.id;
+            quoteIndexMap[q.id] = i;
+        });
+        setData(STORAGE_KEYS.QUOTES, quotes);
+    } else {
+        quotes = [...DEFAULT_QUOTES];
+    }
 }
 
 // ===== IndexedDB 初始化 =====
