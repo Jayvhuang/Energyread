@@ -4,9 +4,9 @@
  */
 
 // ===== Supabase 客户端 =====
-const SUPABASE_URL = 'https://dcccrxdzokokiqpfakfz.supabase.co';
+const SUPABASE_URL = 'https://dcccrxdzokokiqpfakfz.sb.co';
 const SUPABASE_KEY = 'sb_publishable_xBqt3ynwyCDOUotKEJfEUg_S2Qtn_tP';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = window.sb.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const DEFAULT_QUOTES = [
     "我好喜欢我自己！",
@@ -279,11 +279,11 @@ function getData(key, defaultVal) {
 async function uploadAudioToCloud(blob, id) {
     try {
         const path = `audio/${id}.webm`;
-        const { error: uploadError } = await supabase.storage
+        const { error: uploadError } = await sb.storage
             .from('audio')
             .upload(path, blob, { contentType: blob.type || 'audio/webm', upsert: true });
         if (uploadError) throw uploadError;
-        const { data } = supabase.storage.from('audio').getPublicUrl(path);
+        const { data } = sb.storage.from('audio').getPublicUrl(path);
         return data.publicUrl;
     } catch (err) {
         console.warn('上传录音失败', err);
@@ -729,7 +729,7 @@ async function finishCheckin(type) {
         if (els.gardenCheck.checked) {
             const audioUrl = await uploadAudioToCloud(currentRecordingBlob, recordingId);
             if (audioUrl) {
-                await supabase.from('garden_items').insert({
+                await sb.from('garden_items').insert({
                     quote_text: currentQuote,
                     type: 'voice',
                     audio_url: audioUrl
@@ -763,7 +763,7 @@ async function finishCheckin(type) {
 
         // 如果勾选了放入能量花园，写到云端
         if (els.gardenTextCheck.checked) {
-            await supabase.from('garden_items').insert({
+            await sb.from('garden_items').insert({
                 quote_text: currentQuote,
                 type: 'text',
                 content: thoughtText
@@ -1336,7 +1336,7 @@ async function editQuote(index) {
         alert('语句不能为空');
         return;
     }
-    const { error } = await supabase.from('quotes').update({ text }).eq('id', id);
+    const { error } = await sb.from('quotes').update({ text }).eq('id', id);
     if (error) {
         alert('修改失败：' + error.message);
         return;
@@ -1361,7 +1361,7 @@ async function deleteQuote(index) {
     if (!confirm('确定删除这条语句吗？删除后不可恢复。')) return;
 
     const id = quoteIdMap[index];
-    const { error } = await supabase.from('quotes').delete().eq('id', id);
+    const { error } = await sb.from('quotes').delete().eq('id', id);
     if (error) {
         alert('删除失败：' + error.message);
         return;
