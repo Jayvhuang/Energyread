@@ -325,13 +325,6 @@ function setData(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
 }
 
-function loadQuotes() {
-    const savedQuotes = getData(STORAGE_KEYS.QUOTES, null);
-    if (Array.isArray(savedQuotes) && savedQuotes.length > 0) {
-        quotes = savedQuotes;
-    }
-}
-
 function saveQuotes() {
     setData(STORAGE_KEYS.QUOTES, quotes);
 }
