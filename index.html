@@ -6,7 +6,13 @@
     <title>能量咒语 · 每日朗读</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+    window.__sb = createClient(
+      'https://dcccrxdzokokiqpfakfz.supabase.co',
+      'sb_publishable_xBqt3ynwyCDOUotKEJfEUg_S2Qtn_tP'
+    );
+    </script>
 </head>
 <body>
     <!-- 首页：抽卡 + 打卡 -->
@@ -261,6 +267,6 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script defer src="app.js"></script>
 </body>
 </html>

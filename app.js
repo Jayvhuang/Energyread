@@ -4,9 +4,9 @@
  */
 
 // ===== Supabase 客户端 =====
-const SUPABASE_URL = 'https://dcccrxdzokokiqpfakfz.sb.co';
+const SUPABASE_URL = 'https://dcccrxdzokokiqpfakfz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_xBqt3ynwyCDOUotKEJfEUg_S2Qtn_tP';
-const sb = window.sb.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = window.__sb;
 
 const DEFAULT_QUOTES = [
     "我好喜欢我自己！",
@@ -147,7 +147,7 @@ let quoteIndexMap = {};
 
 // 一次性把默认语句同步到云端
 async function seedDefaultQuotesIfEmpty() {
-    const { data, error } = await supabase
+    const { data, error } = await sb
         .from('quotes')
         .select('id', { count: 'exact', head: true });
     if (error) {
@@ -157,7 +157,7 @@ async function seedDefaultQuotesIfEmpty() {
     if (data && data.length > 0) return;
 
     const rows = DEFAULT_QUOTES.map(text => ({ text }));
-    const { error: insertError } = await supabase
+    const { error: insertError } = await sb
         .from('quotes')
         .insert(rows);
     if (insertError) {
@@ -168,7 +168,7 @@ async function seedDefaultQuotesIfEmpty() {
 // 从云端加载语句库
 async function loadQuotes() {
     await seedDefaultQuotesIfEmpty();
-    const { data, error } = await supabase
+    const { data, error } = await sb
         .from('quotes')
         .select('id, text')
         .order('id', { ascending: true });
@@ -292,7 +292,7 @@ async function uploadAudioToCloud(blob, id) {
 }
 
 async function fetchCloudGarden() {
-    const { data, error } = await supabase
+    const { data, error } = await sb
         .from('garden_items')
         .select('id, quote_text, type, content, audio_url, created_at')
         .gt('created_at', new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString())
@@ -801,7 +801,7 @@ async function updateTodayCount() {
     try {
         const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
-        const { count, error } = await supabase
+        const { count, error } = await sb
             .from('garden_items')
             .select('id', { count: 'exact', head: true })
             .gt('created_at', startOfToday.toISOString());
@@ -1209,7 +1209,7 @@ els.addQuoteBtn.addEventListener('click', async () => {
         alert('请先输入语句');
         return;
     }
-    const { data, error } = await supabase
+    const { data, error } = await sb
         .from('quotes')
         .insert({ text })
         .select('id, text')
