@@ -6,7 +6,12 @@
 // ===== Supabase 客户端 =====
 const SUPABASE_URL = 'https://dcccrxdzokokiqpfakfz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_xBqt3ynwyCDOUotKEJfEUg_S2Qtn_tP';
-const sb = window.__sb;
+let sb = null;
+
+async function initSupabase() {
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+}
 
 const DEFAULT_QUOTES = [
     "我好喜欢我自己！",
@@ -1482,6 +1487,7 @@ async function cleanupOldData() {
 }
 
 async function init() {
+    await initSupabase();
     await initDB();
     await loadQuotes(); // 从云端拉语句库
     await cleanupOldData(); // 启动时清理过期数据
