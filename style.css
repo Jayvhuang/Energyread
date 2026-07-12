@@ -990,6 +990,113 @@ html, body {
     margin-bottom: 12px;
 }
 
+/* ===== 后台管理标签页 ===== */
+.admin-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 16px;
+    background: rgba(255,255,255,0.6);
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.admin-tab {
+    flex: 1;
+    padding: 12px 8px;
+    border: none;
+    background: transparent;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #999;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.admin-tab.active {
+    background: rgba(255,255,255,0.8);
+    color: #ff69b4;
+    box-shadow: 0 2px 8px rgba(255,105,180,0.15);
+}
+
+.admin-tab-content {
+    display: none;
+}
+
+.admin-tab-content.active {
+    display: block;
+}
+
+/* ===== 能量花园管理 ===== */
+.admin-garden-list {
+    background: rgba(255,255,255,0.95);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.admin-garden-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.85rem;
+}
+
+.admin-garden-item:last-child {
+    border-bottom: none;
+}
+
+.admin-garden-type {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.admin-garden-type.voice {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.admin-garden-type.text {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.admin-garden-quote {
+    flex: 1;
+    color: #444;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-garden-time {
+    color: #bbb;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.admin-garden-delete {
+    background: #ffebee;
+    color: #e53935;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-weight: 500;
+}
+
+.admin-garden-delete:hover {
+    background: #ffcdd2;
+}
+
 /* ===== 我页面 ===== */
 .me-section {
     background: rgba(255,255,255,0.95);

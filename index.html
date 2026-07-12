@@ -169,50 +169,72 @@
             </div>
             <div class="me-item">
                 <div>
-                    <span>清除所有本地数据</span>
-                    <div class="me-item-desc">所有数据都是保存在本地，若清除浏览器缓存或换设备「我的」的历史记录将会被清除</div>
+                    <span>清除数据</span>
+                    <div class="me-item-desc">所有数据都是保存在本地；<br>清除浏览器缓存或换设备，「我的」的记录将会被清除</div>
                 </div>
                 <button class="btn-danger" id="clearDataBtn">清除</button>
             </div>
             <div class="me-item" id="adminEntry" style="cursor:pointer;">
-                <span>语句管理后台</span>
+                <span>后台管理</span>
                 <span style="color:#999;font-size:0.85rem;">仅管理员可处理</span>
             </div>
         </div>
     </div>
 
-    <!-- 语句管理后台 -->
+    <!-- 后台管理 -->
     <div class="page" id="page-admin">
         <div class="admin-header">
             <button class="admin-back" id="adminBackBtn">← 返回</button>
             <div>
-                <h2>语句管理后台</h2>
-                <p>管理能量咒语库，查看每句的使用反馈</p>
+                <h2>后台管理</h2>
+                <p>仅管理员可处理</p>
             </div>
         </div>
 
-        <div class="admin-panel">
-            <h3>新增语句</h3>
-            <textarea class="admin-input" id="newQuoteInput" placeholder="输入一条新的能量咒语..." maxlength="120"></textarea>
-            <button class="btn-primary admin-add-btn" id="addQuoteBtn">新增语句</button>
+        <!-- 标签页切换 -->
+        <div class="admin-tabs">
+            <button class="admin-tab active" data-tab="quotes">语句管理</button>
+            <button class="admin-tab" data-tab="garden">能量花园管理</button>
         </div>
 
-        <div class="admin-panel">
-            <div class="admin-toolbar">
-                <h3>语句列表</h3>
-                <span id="adminQuoteCount">0 条</span>
+        <!-- 语句管理 -->
+        <div class="admin-tab-content active" id="adminTabQuotes">
+            <div class="admin-panel">
+                <h3>新增语句</h3>
+                <textarea class="admin-input" id="newQuoteInput" placeholder="输入一条新的能量咒语..." maxlength="120"></textarea>
+                <button class="btn-primary admin-add-btn" id="addQuoteBtn">新增语句</button>
             </div>
-            <div class="admin-table-wrap">
-                <div class="admin-table-head">
-                    <div>语句内容</div>
-                    <div class="admin-col-sort" data-sort="draws">抽中 <span class="sort-icon">↕</span></div>
-                    <div class="admin-col-sort" data-sort="likes">喜欢 <span class="sort-icon">↕</span></div>
-                    <div class="admin-col-sort" data-sort="dislikes">不爱 <span class="sort-icon">↕</span></div>
-                    <div class="admin-col-sort" data-sort="checkins">打卡 <span class="sort-icon">↕</span></div>
-                    <div>状态</div>
-                    <div>操作</div>
+
+            <div class="admin-panel">
+                <div class="admin-toolbar">
+                    <h3>语句列表</h3>
+                    <span id="adminQuoteCount">0 条</span>
                 </div>
-                <div class="admin-list" id="adminQuoteList"></div>
+                <div class="admin-table-wrap">
+                    <div class="admin-table-head">
+                        <div>语句内容</div>
+                        <div class="admin-col-sort" data-sort="draws">抽中 <span class="sort-icon">↕</span></div>
+                        <div class="admin-col-sort" data-sort="likes">喜欢 <span class="sort-icon">↕</span></div>
+                        <div class="admin-col-sort" data-sort="dislikes">不爱 <span class="sort-icon">↕</span></div>
+                        <div class="admin-col-sort" data-sort="checkins">打卡 <span class="sort-icon">↕</span></div>
+                        <div>状态</div>
+                        <div>操作</div>
+                    </div>
+                    <div class="admin-list" id="adminQuoteList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 能量花园管理 -->
+        <div class="admin-tab-content" id="adminTabGarden">
+            <div class="admin-panel">
+                <div class="admin-toolbar">
+                    <h3>能量花园记录</h3>
+                    <span id="adminGardenCount">0 条</span>
+                </div>
+                <div class="admin-garden-list" id="adminGardenList">
+                    <div class="empty-garden" style="padding:20px;text-align:center;color:#999;">加载中…</div>
+                </div>
             </div>
         </div>
     </div>
@@ -274,7 +296,7 @@
         <div class="modal-overlay" id="submitModalOverlay"></div>
         <div class="modal-content" style="max-width:380px;">
             <h3 class="modal-title">投稿能量咒语</h3>
-            <textarea class="submit-input" id="submitQuoteInput" placeholder="输入你的能量咒语…" maxlength="50"></textarea>
+            <textarea class="submit-input" id="submitQuoteInput" placeholder="输入你想到或看到的高能一句话…" maxlength="50"></textarea>
             <div class="char-count submit-char-count"><span id="submitCharCount">0</span>/50</div>
             <div class="modal-actions">
                 <button class="btn-primary" id="submitQuoteBtn">投稿</button>
