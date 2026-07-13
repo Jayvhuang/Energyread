@@ -1048,7 +1048,7 @@ async function renderGarden() {
                 <span class="garden-item-time">${timeStr}</span>
                 <button class="garden-comment-btn" data-id="${item.id}">💬 ${commentCount > 0 ? commentCount : ''}</button>
             </div>
-            <div class="garden-comments" id="gardenComments_${item.id}" style="display:none;">
+            <div class="garden-comments" id="gardenComments_${item.id}">
                 <div class="garden-comments-list" id="gardenCommentsList_${item.id}">
                     ${comments.map(c => {
                         if (c.type === 'text') {
@@ -1073,12 +1073,6 @@ async function renderGarden() {
             </div>
         `;
         els.gardenList.appendChild(div);
-
-        // 评论按钮展开/收起
-        div.querySelector('.garden-comment-btn').addEventListener('click', () => {
-            const section = document.getElementById(`gardenComments_${item.id}`);
-            section.style.display = section.style.display === 'none' ? 'block' : 'none';
-        });
 
         // 文字输入计数
         const textarea = document.getElementById(`gardenCommentInput_${item.id}`);
