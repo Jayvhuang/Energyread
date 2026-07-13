@@ -429,7 +429,8 @@ const els = {
     submitCharCount: document.getElementById('submitCharCount'),
     submitQuoteBtn: document.getElementById('submitQuoteBtn'),
     submitCancelBtn: document.getElementById('submitCancelBtn'),
-    submitModalOverlay: document.getElementById('submitModalOverlay')
+    submitModalOverlay: document.getElementById('submitModalOverlay'),
+    themeOptions: document.getElementById('themeOptions')
 };
 
 // ===== 页面导航 =====
@@ -1000,6 +1001,12 @@ async function renderGarden() {
 let currentCalMonth = new Date();
 
 function renderRecordPage() {
+    // 刷新主题选中状态（"我的"页面包含主题选择器）
+    const currentTheme = getData('lm_theme', 'warm');
+    document.querySelectorAll('.theme-dot').forEach(dot => {
+        dot.classList.toggle('active', dot.dataset.theme === currentTheme);
+    });
+
     const checkins = getData(STORAGE_KEYS.CHECKINS, []);
     const thoughts = getData(STORAGE_KEYS.THOUGHTS, []);
 
@@ -1627,6 +1634,33 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// ===== 主题切换 =====
+const THEME_GRADIENTS = {
+    warm: 'linear-gradient(135deg, #ff9a9e 0%, #ff69b4 33%, #667eea 66%, #764ba2 100%)',
+    morandi: 'linear-gradient(135deg, #E8D5D0 0%, #D4C9C0 33%, #BDC8BE 66%, #C5BCC8 100%)',
+    dunhuang: 'linear-gradient(135deg, #D4764A 0%, #E8B85A 33%, #A65D3C 66%, #7A3B2E 100%)',
+    dark: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 33%, #0f3460 66%, #1a1a2e 100%)'
+};
+
+function applyTheme(theme) {
+    const grad = THEME_GRADIENTS[theme];
+    if (!grad) return;
+    document.documentElement.style.setProperty('--bg-gradient', grad);
+    setData('lm_theme', theme);
+    // 更新选中状态
+    document.querySelectorAll('.theme-dot').forEach(dot => {
+        dot.classList.toggle('active', dot.dataset.theme === theme);
+    });
+}
+
+// 主题选择点击
+if (els.themeOptions) {
+    els.themeOptions.addEventListener('click', (e) => {
+        const dot = e.target.closest('.theme-dot');
+        if (dot) applyTheme(dot.dataset.theme);
+    });
+}
+
 // ===== 初始化 =====
 // ===== 清理过期数据（72小时）=====
 async function cleanupOldData() {
@@ -1673,6 +1707,10 @@ async function init() {
     await initDB();
     await loadQuotes(); // 从云端拉语句库
     await cleanupOldData(); // 启动时清理过期数据
+
+    // 恢复主题
+    const savedTheme = getData('lm_theme', 'warm');
+    applyTheme(savedTheme);
 
     // 恢复上次的语句
     const savedQuote = getData(STORAGE_KEYS.LAST_QUOTE, '');
