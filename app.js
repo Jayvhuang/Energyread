@@ -1001,12 +1001,6 @@ async function renderGarden() {
 let currentCalMonth = new Date();
 
 function renderRecordPage() {
-    // 刷新主题选中状态（"我的"页面包含主题选择器）
-    const currentTheme = getData('lm_theme', 'warm');
-    document.querySelectorAll('.theme-dot').forEach(dot => {
-        dot.classList.toggle('active', dot.dataset.theme === currentTheme);
-    });
-
     const checkins = getData(STORAGE_KEYS.CHECKINS, []);
     const thoughts = getData(STORAGE_KEYS.THOUGHTS, []);
 
