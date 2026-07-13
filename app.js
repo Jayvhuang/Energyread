@@ -352,7 +352,7 @@ async function fetchGardenComments(itemIds) {
     return grouped;
 }
 
-async function submitGardenComment(itemId, type, content, audioBlob) {
+async function submitGardenComment(itemId, type, content, audioBlob, authorName) {
     let audioUrl = null;
     if (type === 'voice' && audioBlob) {
         const path = `comments/${itemId}_${Date.now()}.webm`;
@@ -368,7 +368,7 @@ async function submitGardenComment(itemId, type, content, audioBlob) {
     }
     const { data, error } = await sb
         .from('garden_comments')
-        .insert({ garden_item_id: itemId, type, content: content || null, audio_url: audioUrl })
+        .insert({ garden_item_id: itemId, type, content: content || null, audio_url: audioUrl, author_name: authorName || null })
         .select('id, garden_item_id, type, content, audio_url, created_at')
         .single();
     if (error) {
@@ -1051,14 +1051,19 @@ async function renderGarden() {
             <div class="garden-comments" id="gardenComments_${item.id}">
                 <div class="garden-comments-list" id="gardenCommentsList_${item.id}">
                     ${comments.map(c => {
+                        const name = c.author_name ? `<span class="garden-comment-name">${escapeHtml(c.author_name)}</span>` : '';
                         if (c.type === 'text') {
-                            return `<div class="garden-comment-item"><div class="garden-comment-bubble">${escapeHtml(c.content || '')}</div></div>`;
+                            return `<div class="garden-comment-item">${name}<div class="garden-comment-bubble">${escapeHtml(c.content || '')}</div></div>`;
                         } else {
-                            return `<div class="garden-comment-item"><audio class="garden-comment-audio" controls preload="none" src="${c.audio_url || ''}"></audio></div>`;
+                            return `<div class="garden-comment-item">${name}<audio class="garden-comment-audio" controls preload="none" src="${c.audio_url || ''}"></audio></div>`;
                         }
                     }).join('')}
                 </div>
-                <div class="garden-comment-input-area">
+                <button class="garden-comment-write-btn" id="gardenWriteBtn_${item.id}">✏️ 写评论</button>
+                <div class="garden-comment-input-area" id="gardenCommentInputArea_${item.id}" style="display:none;">
+                    <div class="garden-comment-name-row">
+                        <input class="garden-comment-name-input" id="gardenCommentName_${item.id}" placeholder="昵称" maxlength="3">
+                    </div>
                     <textarea class="garden-comment-input" id="gardenCommentInput_${item.id}" placeholder="写评论…" maxlength="200"></textarea>
                     <div class="garden-comment-actions">
                         <span class="garden-comment-charcount" id="gardenCommentChar_${item.id}">0</span>
@@ -1074,6 +1079,11 @@ async function renderGarden() {
         `;
         els.gardenList.appendChild(div);
 
+        // 写评论按钮：展开输入区
+        document.getElementById(`gardenWriteBtn_${item.id}`).addEventListener('click', () => {
+            document.getElementById(`gardenCommentInputArea_${item.id}`).style.display = 'block';
+        });
+
         // 文字输入计数
         const textarea = document.getElementById(`gardenCommentInput_${item.id}`);
         textarea.addEventListener('input', () => {
@@ -1084,7 +1094,8 @@ async function renderGarden() {
         document.getElementById(`gardenSendBtn_${item.id}`).addEventListener('click', async () => {
             const text = textarea.value.trim();
             if (!text) return;
-            const result = await submitGardenComment(item.id, 'text', text, null);
+            const name = document.getElementById(`gardenCommentName_${item.id}`).value.trim().slice(0, 3) || null;
+            const result = await submitGardenComment(item.id, 'text', text, null, name);
             if (result) renderGarden();
         });
 
@@ -1109,7 +1120,8 @@ async function renderGarden() {
                 recMediaRecorder.onstop = async () => {
                     const blob = new Blob(recChunks, { type: 'audio/webm' });
                     stream.getTracks().forEach(t => t.stop());
-                    await submitGardenComment(item.id, 'voice', null, blob);
+                    const name = document.getElementById(`gardenCommentName_${item.id}`).value.trim().slice(0, 3) || null;
+                    await submitGardenComment(item.id, 'voice', null, blob, name);
                     renderGarden();
                 };
                 recMediaRecorder.start();
