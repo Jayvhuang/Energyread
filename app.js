@@ -332,6 +332,52 @@ async function fetchCloudGarden() {
     return data || [];
 }
 
+// ===== 能量花园评论 =====
+async function fetchGardenComments(itemIds) {
+    if (!itemIds.length) return {};
+    const { data, error } = await sb
+        .from('garden_comments')
+        .select('id, garden_item_id, type, content, audio_url, created_at')
+        .in('garden_item_id', itemIds)
+        .order('created_at', { ascending: true });
+    if (error) {
+        console.warn('加载评论失败', error);
+        return {};
+    }
+    const grouped = {};
+    (data || []).forEach(c => {
+        if (!grouped[c.garden_item_id]) grouped[c.garden_item_id] = [];
+        grouped[c.garden_item_id].push(c);
+    });
+    return grouped;
+}
+
+async function submitGardenComment(itemId, type, content, audioBlob) {
+    let audioUrl = null;
+    if (type === 'voice' && audioBlob) {
+        const path = `comments/${itemId}_${Date.now()}.webm`;
+        const { error: uploadError } = await sb.storage
+            .from('audio')
+            .upload(path, audioBlob, { contentType: 'audio/webm', upsert: true });
+        if (uploadError) {
+            console.warn('上传评论录音失败', uploadError);
+            return null;
+        }
+        const { data } = sb.storage.from('audio').getPublicUrl(path);
+        audioUrl = data.publicUrl;
+    }
+    const { data, error } = await sb
+        .from('garden_comments')
+        .insert({ garden_item_id: itemId, type, content: content || null, audio_url: audioUrl })
+        .select('id, garden_item_id, type, content, audio_url, created_at')
+        .single();
+    if (error) {
+        console.warn('提交评论失败', error);
+        return null;
+    }
+    return data;
+}
+
 function setData(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
 }
@@ -978,6 +1024,10 @@ async function renderGarden() {
         return;
     }
 
+    // 加载所有评论
+    const itemIds = items.map(i => i.id);
+    const commentsMap = await fetchGardenComments(itemIds);
+
     items.forEach(item => {
         const div = document.createElement('div');
         div.className = 'garden-item';
@@ -988,12 +1038,106 @@ async function renderGarden() {
             : `<audio class="garden-item-audio" controls preload="none" src="${item.audio_url || ''}"></audio>`;
 
         const timeStr = new Date(item.created_at).toTimeString().slice(0, 5);
+        const comments = commentsMap[item.id] || [];
+        const commentCount = comments.length;
+
         div.innerHTML = `
             <div class="garden-item-quote">${escapeHtml(item.quote_text)}</div>
             ${contentHtml}
-            <div class="garden-item-time">${timeStr}</div>
+            <div class="garden-item-footer">
+                <span class="garden-item-time">${timeStr}</span>
+                <button class="garden-comment-btn" data-id="${item.id}">💬 ${commentCount > 0 ? commentCount : ''}</button>
+            </div>
+            <div class="garden-comments" id="gardenComments_${item.id}" style="display:none;">
+                <div class="garden-comments-list" id="gardenCommentsList_${item.id}">
+                    ${comments.map(c => {
+                        if (c.type === 'text') {
+                            return `<div class="garden-comment-item"><div class="garden-comment-bubble">${escapeHtml(c.content || '')}</div></div>`;
+                        } else {
+                            return `<div class="garden-comment-item"><audio class="garden-comment-audio" controls preload="none" src="${c.audio_url || ''}"></audio></div>`;
+                        }
+                    }).join('')}
+                </div>
+                <div class="garden-comment-input-area">
+                    <textarea class="garden-comment-input" id="gardenCommentInput_${item.id}" placeholder="写评论…" maxlength="200"></textarea>
+                    <div class="garden-comment-actions">
+                        <span class="garden-comment-charcount" id="gardenCommentChar_${item.id}">0</span>
+                        <button class="garden-comment-record-btn" id="gardenRecordBtn_${item.id}" data-id="${item.id}">🎤</button>
+                        <button class="garden-comment-send" id="gardenSendBtn_${item.id}" data-id="${item.id}">发送</button>
+                    </div>
+                    <div class="garden-comment-recording" id="gardenRecording_${item.id}" style="display:none;">
+                        <span class="garden-record-timer" id="gardenRecordTimer_${item.id}">00 / 10</span>
+                        <button class="garden-record-stop" id="gardenRecordStop_${item.id}">停止</button>
+                    </div>
+                </div>
+            </div>
         `;
         els.gardenList.appendChild(div);
+
+        // 评论按钮展开/收起
+        div.querySelector('.garden-comment-btn').addEventListener('click', () => {
+            const section = document.getElementById(`gardenComments_${item.id}`);
+            section.style.display = section.style.display === 'none' ? 'block' : 'none';
+        });
+
+        // 文字输入计数
+        const textarea = document.getElementById(`gardenCommentInput_${item.id}`);
+        textarea.addEventListener('input', () => {
+            document.getElementById(`gardenCommentChar_${item.id}`).textContent = textarea.value.length;
+        });
+
+        // 发送文字评论
+        document.getElementById(`gardenSendBtn_${item.id}`).addEventListener('click', async () => {
+            const text = textarea.value.trim();
+            if (!text) return;
+            const result = await submitGardenComment(item.id, 'text', text, null);
+            if (result) renderGarden();
+        });
+
+        // 语音评论
+        let recMediaRecorder = null;
+        let recChunks = [];
+        let recStartTime = 0;
+        let recTimer = null;
+        const recordBtn = document.getElementById(`gardenRecordBtn_${item.id}`);
+        const recordingArea = document.getElementById(`gardenRecording_${item.id}`);
+        const recordTimer = document.getElementById(`gardenRecordTimer_${item.id}`);
+        const stopBtn = document.getElementById(`gardenRecordStop_${item.id}`);
+
+        recordBtn.addEventListener('click', async () => {
+            if (recMediaRecorder && recMediaRecorder.state === 'recording') return;
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                recMediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+                recChunks = [];
+                recStartTime = Date.now();
+                recMediaRecorder.ondataavailable = e => { if (e.data.size > 0) recChunks.push(e.data); };
+                recMediaRecorder.onstop = async () => {
+                    const blob = new Blob(recChunks, { type: 'audio/webm' });
+                    stream.getTracks().forEach(t => t.stop());
+                    await submitGardenComment(item.id, 'voice', null, blob);
+                    renderGarden();
+                };
+                recMediaRecorder.start();
+                recordBtn.style.display = 'none';
+                recordingArea.style.display = 'flex';
+                recTimer = setInterval(() => {
+                    const elapsed = Math.floor((Date.now() - recStartTime) / 1000);
+                    recordTimer.textContent = `${String(elapsed).padStart(2,'0')} / 10`;
+                    if (elapsed >= 10) {
+                        if (recMediaRecorder && recMediaRecorder.state === 'recording') recMediaRecorder.stop();
+                        clearInterval(recTimer);
+                    }
+                }, 200);
+            } catch (err) {
+                alert('无法访问麦克风：' + err.message);
+            }
+        });
+
+        stopBtn.addEventListener('click', () => {
+            clearInterval(recTimer);
+            if (recMediaRecorder && recMediaRecorder.state === 'recording') recMediaRecorder.stop();
+        });
     });
 }
 
@@ -1633,7 +1777,7 @@ const THEME_GRADIENTS = {
     warm: 'linear-gradient(135deg, #ff9a9e 0%, #ff69b4 33%, #667eea 66%, #764ba2 100%)',
     morandi: 'linear-gradient(135deg, #E8D5D0 0%, #D4C9C0 33%, #BDC8BE 66%, #C5BCC8 100%)',
     dunhuang: 'linear-gradient(135deg, #433721 0%, #F9E3AF 25%, #89AD76 50%, #BE9168 75%, #B44C20 100%)',
-    dark: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 33%, #0f3460 66%, #1a1a2e 100%)'
+    dark: 'linear-gradient(135deg, #4e0909 0%, #38094e 25%, #09114e 50%, #09404e 75%, #4e3409 100%)'
 };
 
 function applyTheme(theme) {
