@@ -1099,9 +1099,12 @@ html, body {
 
 /* ===== 主题选择 ===== */
 .theme-selector {
+    position: fixed;
+    top: 12px;
+    left: 12px;
     display: flex;
     gap: 6px;
-    margin-bottom: 10px;
+    z-index: 200;
 }
 
 .theme-dot {
@@ -1129,6 +1132,7 @@ html, body {
 }
 
 .theme-dot-label {
+    display: none;
     position: absolute;
     top: 100%;
     left: 50%;
@@ -1136,9 +1140,13 @@ html, body {
     font-size: 0.55rem;
     color: rgba(255,255,255,0.9);
     white-space: nowrap;
-    margin-top: 3px;
+    margin-top: 4px;
     pointer-events: none;
     text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.theme-dot:hover .theme-dot-label {
+    display: block;
 }
 
 /* ===== 我页面 ===== */

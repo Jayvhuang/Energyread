@@ -1632,7 +1632,7 @@ function escapeHtml(text) {
 const THEME_GRADIENTS = {
     warm: 'linear-gradient(135deg, #ff9a9e 0%, #ff69b4 33%, #667eea 66%, #764ba2 100%)',
     morandi: 'linear-gradient(135deg, #E8D5D0 0%, #D4C9C0 33%, #BDC8BE 66%, #C5BCC8 100%)',
-    dunhuang: 'linear-gradient(135deg, #D4764A 0%, #E8B85A 33%, #A65D3C 66%, #7A3B2E 100%)',
+    dunhuang: 'linear-gradient(135deg, #433721 0%, #F9E3AF 25%, #89AD76 50%, #BE9168 75%, #B44C20 100%)',
     dark: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 33%, #0f3460 66%, #1a1a2e 100%)'
 };
 
