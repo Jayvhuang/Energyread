@@ -1098,43 +1098,47 @@ html, body {
 }
 
 /* ===== 主题选择 ===== */
-.theme-section {
-    background: rgba(255,255,255,0.6);
-    backdrop-filter: blur(6px);
-    border-radius: 20px;
-    padding: 14px 20px;
-    margin-top: 16px;
-}
-
-.theme-label {
-    font-size: 0.85rem;
-    color: #666;
-    margin-bottom: 10px;
-    font-weight: 500;
-}
-
-.theme-options {
+.theme-selector {
     display: flex;
-    gap: 14px;
+    gap: 6px;
+    margin-bottom: 10px;
 }
 
 .theme-dot {
-    width: 44px;
-    height: 44px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     cursor: pointer;
-    border: 3px solid transparent;
+    border: 2px solid rgba(255,255,255,0.6);
     transition: all 0.25s;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
 .theme-dot:hover {
-    transform: scale(1.1);
+    transform: scale(1.15);
 }
 
 .theme-dot.active {
-    border-color: #333;
+    border-color: #fff;
+    box-shadow: 0 0 8px rgba(255,255,255,0.5);
     transform: scale(1.1);
+}
+
+.theme-dot-label {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.55rem;
+    color: rgba(255,255,255,0.9);
+    white-space: nowrap;
+    margin-top: 3px;
+    pointer-events: none;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 
 /* ===== 我页面 ===== */

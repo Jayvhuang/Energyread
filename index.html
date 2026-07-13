@@ -11,6 +11,12 @@
     <!-- 首页：抽卡 + 打卡 -->
     <div class="page active" id="page-home">
         <div class="home-header">
+            <div class="theme-selector" id="themeOptions">
+                <div class="theme-dot" data-theme="warm" style="background:linear-gradient(135deg,#ff9a9e,#ff69b4,#667eea,#764ba2);" title="暖色渐变"><span class="theme-dot-label">暖色</span></div>
+                <div class="theme-dot" data-theme="morandi" style="background:linear-gradient(135deg,#E8D5D0,#D4C9C0,#BDC8BE,#C5BCC8);" title="莫兰迪色系"><span class="theme-dot-label">莫兰迪</span></div>
+                <div class="theme-dot" data-theme="dunhuang" style="background:linear-gradient(135deg,#D4764A,#E8B85A,#A65D3C,#7A3B2E);" title="敦煌色系"><span class="theme-dot-label">敦煌</span></div>
+                <div class="theme-dot" data-theme="dark" style="background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460,#1a1a2e);" title="暗色系"><span class="theme-dot-label">暗色</span></div>
+            </div>
             <h1 class="app-title">能量咒语</h1>
             <p class="app-subtitle" id="homeSubtitle">今天，也对自己说一句高能的话</p>
         </div>
@@ -100,17 +106,6 @@
         <div class="submit-entry" id="submitEntry">
             <span class="submit-entry-text">📝 想分享你的能量咒语？</span>
             <button class="btn-submit" id="submitEntryBtn">投稿</button>
-        </div>
-
-        <!-- 主题选择 -->
-        <div class="theme-section">
-            <div class="theme-label">主题</div>
-            <div class="theme-options" id="themeOptions">
-                <div class="theme-dot" data-theme="warm" style="background:linear-gradient(135deg,#ff9a9e,#ff69b4,#667eea,#764ba2);" title="暖色渐变"></div>
-                <div class="theme-dot" data-theme="morandi" style="background:linear-gradient(135deg,#E8D5D0,#D4C9C0,#BDC8BE,#C5BCC8);" title="莫兰迪色系"></div>
-                <div class="theme-dot" data-theme="dunhuang" style="background:linear-gradient(135deg,#D4764A,#E8B85A,#A65D3C,#7A3B2E);" title="敦煌色系"></div>
-                <div class="theme-dot" data-theme="dark" style="background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460,#1a1a2e);" title="暗色系"></div>
-            </div>
         </div>
 
         <div class="today-count" id="todayCount" style="display:none;">
