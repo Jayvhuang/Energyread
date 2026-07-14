@@ -520,16 +520,20 @@ function setUserPrefs(prefs) {
 }
 
 async function updateStat(quoteId, field, delta) {
-    // 更新云端（带超时防止卡死）
+    // 更新云端（直接更新，不依赖 RPC 函数）
     try {
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('请求超时')), 5000));
-        await Promise.race([
-            sb.rpc('increment_quote_stat', { p_quote_id: quoteId, p_field: field, p_delta: delta }),
-            timeoutPromise
-        ]);
+        const { data, error } = await sb
+            .from('quotes')
+            .select(field)
+            .eq('id', quoteId)
+            .single();
+        if (!error && data) {
+            const currentVal = data[field] || 0;
+            const newVal = Math.max(0, currentVal + delta);
+            await sb.from('quotes').update({ [field]: newVal }).eq('id', quoteId);
+        }
     } catch (err) {
-        if (err.message === '请求超时') console.warn('云端统计请求超时');
-        else console.warn('更新云端统计失败', err);
+        console.warn('更新云端统计失败', err);
     }
     // 更新本地缓存，管理后台立即生效
     if (!cloudQuoteStats[quoteId]) cloudQuoteStats[quoteId] = { draws: 0, likes: 0, dislikes: 0, checkins: 0 };
@@ -839,7 +843,15 @@ async function finishCheckin(type) {
     // 更新云端打卡计数
     if (lastQuoteId != null) {
         try {
-            await sb.rpc('increment_quote_stat', { p_quote_id: lastQuoteId, p_field: 'checkins', p_delta: 1 });
+            const { data, error } = await sb
+                .from('quotes')
+                .select('checkins')
+                .eq('id', lastQuoteId)
+                .single();
+            if (!error && data) {
+                const newVal = (data.checkins || 0) + 1;
+                await sb.from('quotes').update({ checkins: newVal }).eq('id', lastQuoteId);
+            }
             if (!cloudQuoteStats[lastQuoteId]) cloudQuoteStats[lastQuoteId] = { draws: 0, likes: 0, dislikes: 0, checkins: 0 };
             cloudQuoteStats[lastQuoteId].checkins = (cloudQuoteStats[lastQuoteId].checkins || 0) + 1;
         } catch (err) {
