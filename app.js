@@ -337,7 +337,7 @@ async function fetchGardenComments(itemIds) {
     if (!itemIds.length) return {};
     const { data, error } = await sb
         .from('garden_comments')
-        .select('id, garden_item_id, type, content, audio_url, created_at')
+        .select('id, garden_item_id, type, content, audio_url, author_name, created_at')
         .in('garden_item_id', itemIds)
         .order('created_at', { ascending: true });
     if (error) {
@@ -369,7 +369,7 @@ async function submitGardenComment(itemId, type, content, audioBlob, authorName)
     const { data, error } = await sb
         .from('garden_comments')
         .insert({ garden_item_id: itemId, type, content: content || null, audio_url: audioUrl, author_name: authorName || null })
-        .select('id, garden_item_id, type, content, audio_url, created_at')
+        .select('id, garden_item_id, type, content, audio_url, author_name, created_at')
         .single();
     if (error) {
         console.warn('提交评论失败', error);
