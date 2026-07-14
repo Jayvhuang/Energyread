@@ -547,7 +547,15 @@ html, body {
     margin-bottom: 6px;
 }
 
+.garden-comment-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
 .garden-comment-bubble {
+    flex: 1;
     background: #f0f0ff;
     border-radius: 10px;
     padding: 8px 12px;
@@ -558,14 +566,22 @@ html, body {
 }
 
 .garden-comment-name {
-    display: inline-block;
-    font-size: 0.7rem;
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #667eea;
+    color: #fff;
+    font-size: 0.6rem;
     font-weight: 700;
-    color: #667eea;
-    margin-right: 6px;
-    background: #e8e8ff;
-    padding: 1px 6px;
-    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 4px;
+}
+
+.garden-comment-name-anon {
+    background: #ccc;
 }
 
 .garden-comment-write-btn {
@@ -602,6 +618,74 @@ html, body {
 
 .garden-comment-name-input:focus {
     border-color: #667eea;
+}
+
+/* 评论模式切换 */
+.garden-comment-mode-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 8px;
+    background: #f0f0f0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.garden-comment-mode-tab {
+    flex: 1;
+    padding: 5px 0;
+    border: none;
+    background: transparent;
+    font-size: 0.75rem;
+    color: #999;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.garden-comment-mode-tab.active {
+    background: #667eea;
+    color: #fff;
+}
+
+/* 语音模式各状态 */
+.garden-comment-voice-idle {
+    text-align: center;
+}
+
+.garden-comment-record-start {
+    background: #fff0f0;
+    border: 1px solid #ffcdd2;
+    color: #e53935;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.garden-comment-record-start:hover {
+    background: #ffe0e0;
+}
+
+.garden-comment-voice-done {
+    margin-top: 6px;
+}
+
+.garden-comment-voice-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 6px;
+}
+
+.garden-comment-re-record {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 14px;
+    padding: 5px 14px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    color: #666;
 }
 
 .garden-comment-input-area {
@@ -650,15 +734,6 @@ html, body {
     font-size: 0.7rem;
     color: #aaa;
     margin-right: auto;
-}
-
-.garden-comment-record-btn {
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 20px;
-    padding: 4px 12px;
-    font-size: 1rem;
-    cursor: pointer;
 }
 
 .garden-comment-send {

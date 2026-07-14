@@ -382,6 +382,13 @@ function setData(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
 }
 
+function loadQuotes() {
+    const savedQuotes = getData(STORAGE_KEYS.QUOTES, null);
+    if (Array.isArray(savedQuotes) && savedQuotes.length > 0) {
+        quotes = savedQuotes;
+    }
+}
+
 function saveQuotes() {
     setData(STORAGE_KEYS.QUOTES, quotes);
 }
@@ -464,11 +471,6 @@ const els = {
     adminLoginCancelBtn: document.getElementById('adminLoginCancelBtn'),
     adminLoginHint: document.getElementById('adminLoginHint'),
     adminLoginOverlay: document.getElementById('adminLoginOverlay'),
-    adminTabs: document.querySelectorAll('.admin-tab'),
-    adminTabQuotes: document.getElementById('adminTabQuotes'),
-    adminTabGarden: document.getElementById('adminTabGarden'),
-    adminGardenList: document.getElementById('adminGardenList'),
-    adminGardenCount: document.getElementById('adminGardenCount'),
     submitEntryBtn: document.getElementById('submitEntryBtn'),
     submitModal: document.getElementById('submitModal'),
     submitQuoteInput: document.getElementById('submitQuoteInput'),
@@ -476,7 +478,12 @@ const els = {
     submitQuoteBtn: document.getElementById('submitQuoteBtn'),
     submitCancelBtn: document.getElementById('submitCancelBtn'),
     submitModalOverlay: document.getElementById('submitModalOverlay'),
-    themeOptions: document.getElementById('themeOptions')
+    themeOptions: document.getElementById('themeOptions'),
+    adminTabs: document.querySelectorAll('.admin-tab'),
+    adminTabQuotes: document.getElementById('adminTabQuotes'),
+    adminTabGarden: document.getElementById('adminTabGarden'),
+    adminGardenList: document.getElementById('adminGardenList'),
+    adminGardenCount: document.getElementById('adminGardenCount')
 };
 
 // ===== 页面导航 =====
@@ -576,6 +583,7 @@ els.dislikeBtn.addEventListener('click', async () => {
     await updateStat(lastQuoteId, 'dislikes', 1);
     setUserPrefs(prefs);
     updateQuoteActionButtons();
+    await checkSubmissionStatus(lastQuoteId);
 });
 
 function updateQuoteActionButtons() {
@@ -829,21 +837,16 @@ async function finishCheckin(type) {
         }
     }
 
-    // 保存录音
+    // 保存录音 & 提交能量花园
     let recordingId = null;
+    let audioUrlForGarden = null;
+    let thoughtTextForGarden = '';
     if ((type === 'voice' || type === 'both') && currentRecordingBlob) {
         recordingId = `rec_${Date.now()}`;
 
-        // 同步保存到云端（音频 + 数据库条目）
+        // 上传音频到云端（用于能量花园）
         if (els.gardenCheck.checked) {
-            const audioUrl = await uploadAudioToCloud(currentRecordingBlob, recordingId);
-            if (audioUrl) {
-                await sb.from('garden_items').insert({
-                    quote_text: currentQuote,
-                    type: 'voice',
-                    audio_url: audioUrl
-                });
-            }
+            audioUrlForGarden = await uploadAudioToCloud(currentRecordingBlob, recordingId);
         }
 
         // 同时存到本地 IndexedDB
@@ -858,25 +861,43 @@ async function finishCheckin(type) {
         setData(STORAGE_KEYS.CHECKINS, updatedCheckins);
     }
 
-    // 保存文字感想
-    let thoughtText = '';
+    // 保存文字感想 & 准备花园内容
     if ((type === 'text' || type === 'both') && els.thoughtInput.value.trim()) {
-        thoughtText = els.thoughtInput.value.trim();
+        thoughtTextForGarden = els.thoughtInput.value.trim();
         const thoughts = getData(STORAGE_KEYS.THOUGHTS, []);
         thoughts.push({
             date: dateStr,
             time: timeStr,
             quote: currentQuote,
-            text: thoughtText
+            text: thoughtTextForGarden
         });
         setData(STORAGE_KEYS.THOUGHTS, thoughts);
+    }
 
-        // 如果勾选了放入能量花园，写到云端
-        if (els.gardenTextCheck.checked) {
+    // 提交能量花园：如果是 both 类型，合并为一条记录
+    const shouldSubmitToGarden = els.gardenCheck.checked || els.gardenTextCheck.checked;
+    if (shouldSubmitToGarden && currentQuote) {
+        if (type === 'both') {
+            // 同时有录音和文字 → 合并为一条 type='both'
+            if (audioUrlForGarden && thoughtTextForGarden) {
+                await sb.from('garden_items').insert({
+                    quote_text: currentQuote,
+                    type: 'both',
+                    content: thoughtTextForGarden,
+                    audio_url: audioUrlForGarden
+                });
+            }
+        } else if (type === 'voice' && els.gardenCheck.checked && audioUrlForGarden) {
+            await sb.from('garden_items').insert({
+                quote_text: currentQuote,
+                type: 'voice',
+                audio_url: audioUrlForGarden
+            });
+        } else if (type === 'text' && els.gardenTextCheck.checked && thoughtTextForGarden) {
             await sb.from('garden_items').insert({
                 quote_text: currentQuote,
                 type: 'text',
-                content: thoughtText
+                content: thoughtTextForGarden
             });
         }
     }
@@ -1033,9 +1054,15 @@ async function renderGarden() {
         div.className = 'garden-item';
 
         const isText = item.type === 'text';
-        const contentHtml = isText
-            ? `<div class="garden-item-text">${escapeHtml(item.content || '')}</div>`
-            : `<audio class="garden-item-audio" controls preload="none" src="${item.audio_url || ''}"></audio>`;
+        const isBoth = item.type === 'both';
+        let contentHtml = '';
+        if (isBoth) {
+            contentHtml = `<audio class="garden-item-audio" controls preload="none" src="${item.audio_url || ''}"></audio><div class="garden-item-text" style="margin-top:6px;">${escapeHtml(item.content || '')}</div>`;
+        } else if (isText) {
+            contentHtml = `<div class="garden-item-text">${escapeHtml(item.content || '')}</div>`;
+        } else {
+            contentHtml = `<audio class="garden-item-audio" controls preload="none" src="${item.audio_url || ''}"></audio>`;
+        }
 
         const timeStr = new Date(item.created_at).toTimeString().slice(0, 5);
         const comments = commentsMap[item.id] || [];
@@ -1051,11 +1078,11 @@ async function renderGarden() {
             <div class="garden-comments" id="gardenComments_${item.id}">
                 <div class="garden-comments-list" id="gardenCommentsList_${item.id}">
                     ${comments.map(c => {
-                        const name = c.author_name ? `<span class="garden-comment-name">${escapeHtml(c.author_name)}</span>` : '';
+                        const nameHtml = c.author_name ? `<span class="garden-comment-name">${escapeHtml(c.author_name)}</span>` : '<span class="garden-comment-name garden-comment-name-anon">?</span>';
                         if (c.type === 'text') {
-                            return `<div class="garden-comment-item">${name}<div class="garden-comment-bubble">${escapeHtml(c.content || '')}</div></div>`;
+                            return `<div class="garden-comment-item">${nameHtml}<div class="garden-comment-bubble">${escapeHtml(c.content || '')}</div></div>`;
                         } else {
-                            return `<div class="garden-comment-item">${name}<audio class="garden-comment-audio" controls preload="none" src="${c.audio_url || ''}"></audio></div>`;
+                            return `<div class="garden-comment-item">${nameHtml}<audio class="garden-comment-audio" controls preload="none" src="${c.audio_url || ''}"></audio></div>`;
                         }
                     }).join('')}
                 </div>
@@ -1064,15 +1091,34 @@ async function renderGarden() {
                     <div class="garden-comment-name-row">
                         <input class="garden-comment-name-input" id="gardenCommentName_${item.id}" placeholder="昵称" maxlength="3">
                     </div>
-                    <textarea class="garden-comment-input" id="gardenCommentInput_${item.id}" placeholder="写评论…" maxlength="200"></textarea>
-                    <div class="garden-comment-actions">
-                        <span class="garden-comment-charcount" id="gardenCommentChar_${item.id}">0</span>
-                        <button class="garden-comment-record-btn" id="gardenRecordBtn_${item.id}" data-id="${item.id}">🎤</button>
-                        <button class="garden-comment-send" id="gardenSendBtn_${item.id}" data-id="${item.id}">发送</button>
+                    <div class="garden-comment-mode-tabs">
+                        <button class="garden-comment-mode-tab active" data-mode="text" id="gardenModeText_${item.id}">文字</button>
+                        <button class="garden-comment-mode-tab" data-mode="voice" id="gardenModeVoice_${item.id}">语音</button>
                     </div>
-                    <div class="garden-comment-recording" id="gardenRecording_${item.id}" style="display:none;">
-                        <span class="garden-record-timer" id="gardenRecordTimer_${item.id}">00 / 10</span>
-                        <button class="garden-record-stop" id="gardenRecordStop_${item.id}">停止</button>
+                    <!-- 文字模式 -->
+                    <div class="garden-comment-text-mode" id="gardenTextMode_${item.id}">
+                        <textarea class="garden-comment-input" id="gardenCommentInput_${item.id}" placeholder="写评论…" maxlength="200"></textarea>
+                        <div class="garden-comment-actions">
+                            <span class="garden-comment-charcount" id="gardenCommentChar_${item.id}">0</span>
+                            <button class="garden-comment-send" id="gardenSendBtn_${item.id}" data-id="${item.id}">发送</button>
+                        </div>
+                    </div>
+                    <!-- 语音模式 -->
+                    <div class="garden-comment-voice-mode" id="gardenVoiceMode_${item.id}" style="display:none;">
+                        <div class="garden-comment-voice-idle" id="gardenVoiceIdle_${item.id}">
+                            <button class="garden-comment-record-start" id="gardenRecordStart_${item.id}">🎤 开始录音</button>
+                        </div>
+                        <div class="garden-comment-recording" id="gardenRecording_${item.id}" style="display:none;">
+                            <span class="garden-record-timer" id="gardenRecordTimer_${item.id}">00 / 10</span>
+                            <button class="garden-record-stop" id="gardenRecordStop_${item.id}">⏹ 停止</button>
+                        </div>
+                        <div class="garden-comment-voice-done" id="gardenVoiceDone_${item.id}" style="display:none;">
+                            <audio class="garden-comment-audio" id="gardenVoicePreview_${item.id}" controls preload="none"></audio>
+                            <div class="garden-comment-voice-actions">
+                                <button class="garden-comment-re-record" id="gardenReRecord_${item.id}">重新录</button>
+                                <button class="garden-comment-send" id="gardenVoiceSend_${item.id}" data-id="${item.id}">发送</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1082,6 +1128,29 @@ async function renderGarden() {
         // 写评论按钮：展开输入区
         document.getElementById(`gardenWriteBtn_${item.id}`).addEventListener('click', () => {
             document.getElementById(`gardenCommentInputArea_${item.id}`).style.display = 'block';
+        });
+
+        // 文字/语音模式切换
+        let currentCommentMode = 'text';
+        const modeText = document.getElementById(`gardenModeText_${item.id}`);
+        const modeVoice = document.getElementById(`gardenModeVoice_${item.id}`);
+        const textModeDiv = document.getElementById(`gardenTextMode_${item.id}`);
+        const voiceModeDiv = document.getElementById(`gardenVoiceMode_${item.id}`);
+
+        modeText.addEventListener('click', () => {
+            currentCommentMode = 'text';
+            modeText.classList.add('active');
+            modeVoice.classList.remove('active');
+            textModeDiv.style.display = 'block';
+            voiceModeDiv.style.display = 'none';
+        });
+
+        modeVoice.addEventListener('click', () => {
+            currentCommentMode = 'voice';
+            modeVoice.classList.add('active');
+            modeText.classList.remove('active');
+            textModeDiv.style.display = 'none';
+            voiceModeDiv.style.display = 'block';
         });
 
         // 文字输入计数
@@ -1104,28 +1173,33 @@ async function renderGarden() {
         let recChunks = [];
         let recStartTime = 0;
         let recTimer = null;
-        const recordBtn = document.getElementById(`gardenRecordBtn_${item.id}`);
+        let currentVoiceBlob = null;
+        const recordStartBtn = document.getElementById(`gardenRecordStart_${item.id}`);
         const recordingArea = document.getElementById(`gardenRecording_${item.id}`);
+        const voiceIdle = document.getElementById(`gardenVoiceIdle_${item.id}`);
+        const voiceDone = document.getElementById(`gardenVoiceDone_${item.id}`);
+        const voicePreview = document.getElementById(`gardenVoicePreview_${item.id}`);
         const recordTimer = document.getElementById(`gardenRecordTimer_${item.id}`);
         const stopBtn = document.getElementById(`gardenRecordStop_${item.id}`);
+        const reRecordBtn = document.getElementById(`gardenReRecord_${item.id}`);
 
-        recordBtn.addEventListener('click', async () => {
-            if (recMediaRecorder && recMediaRecorder.state === 'recording') return;
+        async function startVoiceRecording() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 recMediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
                 recChunks = [];
                 recStartTime = Date.now();
+                currentVoiceBlob = null;
                 recMediaRecorder.ondataavailable = e => { if (e.data.size > 0) recChunks.push(e.data); };
                 recMediaRecorder.onstop = async () => {
-                    const blob = new Blob(recChunks, { type: 'audio/webm' });
+                    currentVoiceBlob = new Blob(recChunks, { type: 'audio/webm' });
                     stream.getTracks().forEach(t => t.stop());
-                    const name = document.getElementById(`gardenCommentName_${item.id}`).value.trim().slice(0, 3) || null;
-                    await submitGardenComment(item.id, 'voice', null, blob, name);
-                    renderGarden();
+                    voicePreview.src = URL.createObjectURL(currentVoiceBlob);
+                    recordingArea.style.display = 'none';
+                    voiceDone.style.display = 'block';
                 };
                 recMediaRecorder.start();
-                recordBtn.style.display = 'none';
+                voiceIdle.style.display = 'none';
                 recordingArea.style.display = 'flex';
                 recTimer = setInterval(() => {
                     const elapsed = Math.floor((Date.now() - recStartTime) / 1000);
@@ -1138,11 +1212,29 @@ async function renderGarden() {
             } catch (err) {
                 alert('无法访问麦克风：' + err.message);
             }
-        });
+        }
+
+        recordStartBtn.addEventListener('click', startVoiceRecording);
 
         stopBtn.addEventListener('click', () => {
             clearInterval(recTimer);
             if (recMediaRecorder && recMediaRecorder.state === 'recording') recMediaRecorder.stop();
+        });
+
+        reRecordBtn.addEventListener('click', () => {
+            currentVoiceBlob = null;
+            voiceDone.style.display = 'none';
+            voiceIdle.style.display = 'block';
+            if (voicePreview.src) URL.revokeObjectURL(voicePreview.src);
+            voicePreview.src = '';
+        });
+
+        // 发送语音评论
+        document.getElementById(`gardenVoiceSend_${item.id}`).addEventListener('click', async () => {
+            if (!currentVoiceBlob) return;
+            const name = document.getElementById(`gardenCommentName_${item.id}`).value.trim().slice(0, 3) || null;
+            const result = await submitGardenComment(item.id, 'voice', null, currentVoiceBlob, name);
+            if (result) renderGarden();
         });
     });
 }
@@ -1367,7 +1459,7 @@ function renderThoughtHistory(thoughts) {
 }
 
 
-// ===== 语句管理后台 =====
+// ===== 后台管理 =====
 els.adminEntry.addEventListener('click', () => {
     if (!adminLoggedIn) {
         els.adminLoginModal.style.display = 'flex';
@@ -1705,8 +1797,10 @@ async function renderAdminGarden() {
         const div = document.createElement('div');
         div.className = 'admin-garden-item';
 
-        const isVoice = item.type === 'voice';
-        const typeHtml = `<span class="admin-garden-type ${isVoice ? 'voice' : 'text'}">${isVoice ? '录音' : '文字'}</span>`;
+        const isVoice = item.type === 'voice' || item.type === 'both';
+        const typeText = item.type === 'both' ? '融合' : (item.type === 'voice' ? '录音' : '文字');
+
+        const typeHtml = `<span class="admin-garden-type ${isVoice ? 'voice' : 'text'}">${typeText}</span>`;
 
         const timeStr = new Date(item.created_at).toTimeString().slice(0, 5);
 
@@ -1732,7 +1826,7 @@ async function renderAdminGarden() {
             }
 
             // 如果是录音，从 Storage 删除音频文件
-            if (item.type === 'voice' && audioUrl) {
+            if ((item.type === 'voice' || item.type === 'both') && audioUrl) {
                 const pathMatch = audioUrl.match(/\/audio\/(.+\.webm)/);
                 if (pathMatch) {
                     await sb.storage.from('audio').remove([`audio/${pathMatch[1]}`]);
