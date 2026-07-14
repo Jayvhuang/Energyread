@@ -520,11 +520,16 @@ function setUserPrefs(prefs) {
 }
 
 async function updateStat(quoteId, field, delta) {
-    // 更新云端
+    // 更新云端（带超时防止卡死）
     try {
-        await sb.rpc('increment_quote_stat', { p_quote_id: quoteId, p_field: field, p_delta: delta });
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('请求超时')), 5000));
+        await Promise.race([
+            sb.rpc('increment_quote_stat', { p_quote_id: quoteId, p_field: field, p_delta: delta }),
+            timeoutPromise
+        ]);
     } catch (err) {
-        console.warn('更新云端统计失败', err);
+        if (err.message === '请求超时') console.warn('云端统计请求超时');
+        else console.warn('更新云端统计失败', err);
     }
     // 更新本地缓存，管理后台立即生效
     if (!cloudQuoteStats[quoteId]) cloudQuoteStats[quoteId] = { draws: 0, likes: 0, dislikes: 0, checkins: 0 };
@@ -882,13 +887,14 @@ async function finishCheckin(type) {
     // 提交能量花园：如果是 both 类型，合并为一条记录
     const shouldSubmitToGarden = els.gardenCheck.checked || els.gardenTextCheck.checked;
     if (shouldSubmitToGarden && currentQuote) {
-        if (type === 'both') {
-            // 同时有录音和文字 → 合并为一条，任一项缺失也能提交
-            const insertData = { quote_text: currentQuote, type: 'both' };
-            if (audioUrlForGarden) insertData.audio_url = audioUrlForGarden;
-            if (thoughtTextForGarden) insertData.content = thoughtTextForGarden;
-            await sb.from('garden_items').insert(insertData);
-        } else if (type === 'voice' && els.gardenCheck.checked && audioUrlForGarden) {
+        try {
+            if (type === 'both') {
+                // 同时有录音和文字 → 合并为一条，type 用 voice 并附带文字
+                const insertData = { quote_text: currentQuote, type: 'voice' };
+                if (audioUrlForGarden) insertData.audio_url = audioUrlForGarden;
+                if (thoughtTextForGarden) insertData.content = thoughtTextForGarden;
+                await sb.from('garden_items').insert(insertData);
+            } else if (type === 'voice' && els.gardenCheck.checked && audioUrlForGarden) {
             await sb.from('garden_items').insert({
                 quote_text: currentQuote,
                 type: 'voice',
@@ -900,6 +906,9 @@ async function finishCheckin(type) {
                 type: 'text',
                 content: thoughtTextForGarden
             });
+        }
+        } catch (err) {
+            console.warn('提交能量花园失败', err);
         }
     }
 
@@ -1054,15 +1063,15 @@ async function renderGarden() {
         const div = document.createElement('div');
         div.className = 'garden-item';
 
-        const isText = item.type === 'text';
-        const isBoth = item.type === 'both';
+        const hasAudio = !!item.audio_url;
+        const hasText = !!item.content;
         let contentHtml = '';
-        if (isBoth) {
-            contentHtml = `<audio class="garden-item-audio" controls preload="none" src="${item.audio_url || ''}"></audio><div class="garden-item-text" style="margin-top:6px;">${escapeHtml(item.content || '')}</div>`;
-        } else if (isText) {
-            contentHtml = `<div class="garden-item-text">${escapeHtml(item.content || '')}</div>`;
-        } else {
-            contentHtml = `<audio class="garden-item-audio" controls preload="none" src="${item.audio_url || ''}"></audio>`;
+        if (hasAudio && hasText) {
+            contentHtml = `<audio class="garden-item-audio" controls preload="none" src="${item.audio_url}"></audio><div class="garden-item-text" style="margin-top:6px;">${escapeHtml(item.content)}</div>`;
+        } else if (hasText) {
+            contentHtml = `<div class="garden-item-text">${escapeHtml(item.content)}</div>`;
+        } else if (hasAudio) {
+            contentHtml = `<audio class="garden-item-audio" controls preload="none" src="${item.audio_url}"></audio>`;
         }
 
         const timeStr = new Date(item.created_at).toTimeString().slice(0, 5);
@@ -1087,7 +1096,7 @@ async function renderGarden() {
                         }
                     }).join('')}
                 </div>
-                <button class="garden-comment-write-btn" id="gardenWriteBtn_${item.id}">✏️ 写评论</button>
+                <button class="garden-comment-write-btn" id="gardenWriteBtn_${item.id}">评论</button>
                 <div class="garden-comment-input-area" id="gardenCommentInputArea_${item.id}" style="display:none;">
                     <div class="garden-comment-name-row">
                         <input class="garden-comment-name-input" id="gardenCommentName_${item.id}" placeholder="昵称" maxlength="3">
@@ -1132,9 +1141,10 @@ async function renderGarden() {
             commentsDiv.style.display = commentsDiv.style.display === 'none' ? 'block' : 'none';
         });
 
-        // 写评论按钮：展开输入区
+        // 评论按钮：切换展开/收回输入区
         document.getElementById(`gardenWriteBtn_${item.id}`).addEventListener('click', () => {
-            document.getElementById(`gardenCommentInputArea_${item.id}`).style.display = 'block';
+            const area = document.getElementById(`gardenCommentInputArea_${item.id}`);
+            area.style.display = area.style.display === 'none' ? 'block' : 'none';
         });
 
         // 文字/语音模式切换
@@ -1804,8 +1814,9 @@ async function renderAdminGarden() {
         const div = document.createElement('div');
         div.className = 'admin-garden-item';
 
-        const isVoice = item.type === 'voice' || item.type === 'both';
-        const typeText = item.type === 'both' ? '融合' : (item.type === 'voice' ? '录音' : '文字');
+        const hasBoth = item.type === 'voice' && item.content;
+        const isVoice = item.type === 'voice';
+        const typeText = hasBoth ? '融合' : (isVoice ? '录音' : '文字');
 
         const typeHtml = `<span class="admin-garden-type ${isVoice ? 'voice' : 'text'}">${typeText}</span>`;
 
@@ -1833,7 +1844,7 @@ async function renderAdminGarden() {
             }
 
             // 如果是录音，从 Storage 删除音频文件
-            if ((item.type === 'voice' || item.type === 'both') && audioUrl) {
+            if (item.type === 'voice' && audioUrl) {
                 const pathMatch = audioUrl.match(/\/audio\/(.+\.webm)/);
                 if (pathMatch) {
                     await sb.storage.from('audio').remove([`audio/${pathMatch[1]}`]);
