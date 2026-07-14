@@ -501,7 +501,12 @@ document.querySelectorAll('.nav-item').forEach(btn => {
 });
 // ===== 抽一句话 =====
 els.drawBtn.addEventListener('click', async () => {
-    await drawQuote();
+    try {
+        await drawQuote();
+    } catch (err) {
+        console.error('抽语句出错', err);
+        els.quoteText.textContent = '点击下方按钮，开始你的能量咒语之旅';
+    }
 });
 
 // ===== 喜欢 / 不爱 =====
@@ -878,15 +883,11 @@ async function finishCheckin(type) {
     const shouldSubmitToGarden = els.gardenCheck.checked || els.gardenTextCheck.checked;
     if (shouldSubmitToGarden && currentQuote) {
         if (type === 'both') {
-            // 同时有录音和文字 → 合并为一条 type='both'
-            if (audioUrlForGarden && thoughtTextForGarden) {
-                await sb.from('garden_items').insert({
-                    quote_text: currentQuote,
-                    type: 'both',
-                    content: thoughtTextForGarden,
-                    audio_url: audioUrlForGarden
-                });
-            }
+            // 同时有录音和文字 → 合并为一条，任一项缺失也能提交
+            const insertData = { quote_text: currentQuote, type: 'both' };
+            if (audioUrlForGarden) insertData.audio_url = audioUrlForGarden;
+            if (thoughtTextForGarden) insertData.content = thoughtTextForGarden;
+            await sb.from('garden_items').insert(insertData);
         } else if (type === 'voice' && els.gardenCheck.checked && audioUrlForGarden) {
             await sb.from('garden_items').insert({
                 quote_text: currentQuote,
@@ -1124,6 +1125,12 @@ async function renderGarden() {
             </div>
         `;
         els.gardenList.appendChild(div);
+
+        // 💬 按钮：折叠/展开评论区
+        div.querySelector('.garden-comment-btn').addEventListener('click', () => {
+            const commentsDiv = document.getElementById(`gardenComments_${item.id}`);
+            commentsDiv.style.display = commentsDiv.style.display === 'none' ? 'block' : 'none';
+        });
 
         // 写评论按钮：展开输入区
         document.getElementById(`gardenWriteBtn_${item.id}`).addEventListener('click', () => {
