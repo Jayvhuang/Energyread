@@ -2104,6 +2104,9 @@ async function init() {
         els.quoteText.textContent = currentQuote;
         els.checkinSection.style.display = 'block';
         resetCheckinState();
+        // 确保打卡选项可见
+        const co = els.checkinSection.querySelector('.checkin-options');
+        if (co) co.style.display = 'flex';
 
         // 显示喜欢/不爱按钮
         els.leftAction.style.visibility = 'visible';
