@@ -447,6 +447,7 @@ const els = {
     saveCardBtn: document.getElementById('saveCardBtn'),
     closeModalBtn: document.getElementById('closeModalBtn'),
     homeSubtitle: document.getElementById('homeSubtitle'),
+    actionBar: document.getElementById('actionBar'),
     quoteActions: document.getElementById('leftAction'),
     leftAction: document.getElementById('leftAction'),
     rightAction: document.getElementById('rightAction'),
@@ -519,12 +520,8 @@ els.customCorner.addEventListener('click', () => {
 
 function enterCustomMode() {
     isCustomMode = true;
-    // 隐藏抽一句、喜欢、不爱
-    els.drawBtn.style.display = 'none';
-    els.leftAction.style.visibility = 'hidden';
-    els.leftAction.style.opacity = '0';
-    els.rightAction.style.visibility = 'hidden';
-    els.rightAction.style.opacity = '0';
+    // 隐藏整个操作栏（抽一句、喜欢、不爱）
+    els.actionBar.style.display = 'none';
     // 显示输入框，隐藏引文
     els.quoteText.style.display = 'none';
     els.customInput.style.display = 'block';
@@ -543,8 +540,8 @@ function enterCustomMode() {
 
 function exitCustomMode() {
     isCustomMode = false;
-    // 恢复按钮
-    els.drawBtn.style.display = '';
+    // 恢复操作栏
+    els.actionBar.style.display = '';
     // 显示引文
     els.quoteText.style.display = '';
     els.customInput.style.display = 'none';
@@ -557,10 +554,6 @@ function exitCustomMode() {
     els.quoteText.textContent = '点击下方按钮，开始你的能量咒语之旅';
     els.checkinSection.style.display = 'none';
     resetCheckinState();
-    els.leftAction.style.visibility = 'hidden';
-    els.leftAction.style.opacity = '0';
-    els.rightAction.style.visibility = 'hidden';
-    els.rightAction.style.opacity = '0';
 }
 
 // 自定义输入字数统计
