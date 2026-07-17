@@ -399,6 +399,7 @@ let adminSortBy = 'default';
 let adminSortOrder = 'desc';
 const ADMIN_PASSWORD = 'energy2026';
 let adminLoggedIn = false;
+let isCustomMode = false;
 
 // ===== DOM 元素 =====
 const els = {
@@ -430,6 +431,7 @@ const els = {
     totalCheckins: document.getElementById('totalCheckins'),
     totalDays: document.getElementById('totalDays'),
     streakDays: document.getElementById('streakDays'),
+    totalDraws: document.getElementById('totalDraws'),
     calTitle: document.getElementById('calTitle'),
     calendarGrid: document.getElementById('calendarGrid'),
     prevMonth: document.getElementById('prevMonth'),
@@ -471,6 +473,8 @@ const els = {
     submitQuoteBtn: document.getElementById('submitQuoteBtn'),
     submitCancelBtn: document.getElementById('submitCancelBtn'),
     submitModalOverlay: document.getElementById('submitModalOverlay'),
+    customCorner: document.getElementById('customCorner'),
+    customInput: document.getElementById('customInput'),
     themeOptions: document.getElementById('themeOptions'),
     adminTabs: document.querySelectorAll('.admin-tab'),
     adminTabQuotes: document.getElementById('adminTabQuotes'),
@@ -495,12 +499,65 @@ document.querySelectorAll('.nav-item').forEach(btn => {
 // ===== 抽一句话 =====
 els.drawBtn.addEventListener('click', async () => {
     try {
+        if (isCustomMode) exitCustomMode();
         await drawQuote();
     } catch (err) {
         console.error('抽语句出错', err);
         els.quoteText.textContent = '点击下方按钮，开始你的能量咒语之旅';
     }
 });
+
+// 自定义角落点击
+els.customCorner.addEventListener('click', () => {
+    if (isCustomMode) {
+        exitCustomMode();
+    } else {
+        enterCustomMode();
+    }
+});
+
+function enterCustomMode() {
+    isCustomMode = true;
+    // 隐藏抽一句、喜欢、不爱
+    els.drawBtn.style.display = 'none';
+    els.leftAction.style.visibility = 'hidden';
+    els.leftAction.style.opacity = '0';
+    els.rightAction.style.visibility = 'hidden';
+    els.rightAction.style.opacity = '0';
+    // 显示输入框，隐藏引文
+    els.quoteText.style.display = 'none';
+    els.customInput.style.display = 'block';
+    els.customInput.value = '';
+    els.customCorner.textContent = '抽一句▸';
+    // 重置打卡状态
+    els.checkinSection.style.display = 'block';
+    resetCheckinState();
+    // 清空当前语句
+    currentQuote = '';
+    lastQuoteId = null;
+    setTimeout(() => els.customInput.focus(), 200);
+}
+
+function exitCustomMode() {
+    isCustomMode = false;
+    // 恢复按钮
+    els.drawBtn.style.display = '';
+    // 显示引文
+    els.quoteText.style.display = '';
+    els.customInput.style.display = 'none';
+    els.customInput.value = '';
+    els.customCorner.textContent = '自定义▸';
+    // 恢复到没有语句的状态
+    currentQuote = '';
+    lastQuoteId = null;
+    els.quoteText.textContent = '点击下方按钮，开始你的能量咒语之旅';
+    els.checkinSection.style.display = 'none';
+    resetCheckinState();
+    els.leftAction.style.visibility = 'hidden';
+    els.leftAction.style.opacity = '0';
+    els.rightAction.style.visibility = 'hidden';
+    els.rightAction.style.opacity = '0';
+}
 
 // ===== 喜欢 / 不爱 =====
 
@@ -811,6 +868,15 @@ els.submitCheckinBtn.addEventListener('click', () => {
 });
 
 async function finishCheckin(type) {
+    // 自定义模式：从输入框获取内容
+    if (isCustomMode) {
+        const customText = els.customInput.value.trim();
+        if (!customText) {
+            alert('请先输入你要朗读的内容');
+            return;
+        }
+        currentQuote = customText;
+    }
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -827,7 +893,8 @@ async function finishCheckin(type) {
         quote: currentQuote,
         type: type,
         hasVoice: type === 'voice' || type === 'both',
-        hasText: type === 'text' || type === 'both'
+        hasText: type === 'text' || type === 'both',
+        isCustom: isCustomMode
     };
 
     checkins.push(checkinData);
@@ -1270,7 +1337,9 @@ function renderRecordPage() {
     const checkins = getData(STORAGE_KEYS.CHECKINS, []);
     const thoughts = getData(STORAGE_KEYS.THOUGHTS, []);
 
-    // 统计：打卡次数、打卡天数、连续几天
+    // 统计：抽选次数、打卡次数、打卡天数、连续几天
+    const totalDraws = Object.values(cloudQuoteStats).reduce((sum, s) => sum + (s.draws || 0), 0);
+    els.totalDraws.textContent = totalDraws;
     const uniqueDates = new Set(checkins.map(c => c.date));
     els.totalCheckins.textContent = checkins.length;
     els.totalDays.textContent = uniqueDates.size;

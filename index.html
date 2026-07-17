@@ -26,6 +26,8 @@
         <div class="quote-section">
             <div class="quote-card" id="quoteCard">
                 <p class="quote-text" id="quoteText">点击下方按钮，开始你的能量咒语之旅</p>
+                <textarea class="custom-input" id="customInput" placeholder="粘贴或输入你想读的话…" maxlength="200" style="display:none;"></textarea>
+                <span class="custom-corner" id="customCorner">自定义▸</span>
             </div>
             <div class="action-bar" id="actionBar">
                 <div class="action-side" id="leftAction" style="visibility:hidden; opacity:0;">
@@ -134,6 +136,10 @@
         </div>
 
         <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-num" id="totalDraws">0</div>
+                <div class="stat-label">抽选次数</div>
+            </div>
             <div class="stat-item">
                 <div class="stat-num" id="totalCheckins">0</div>
                 <div class="stat-label">打卡次数</div>
