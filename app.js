@@ -475,6 +475,7 @@ const els = {
     submitModalOverlay: document.getElementById('submitModalOverlay'),
     customCorner: document.getElementById('customCorner'),
     customInput: document.getElementById('customInput'),
+    customCharCount: document.getElementById('customCharCount'),
     themeOptions: document.getElementById('themeOptions'),
     adminTabs: document.querySelectorAll('.admin-tab'),
     adminTabQuotes: document.getElementById('adminTabQuotes'),
@@ -528,10 +529,15 @@ function enterCustomMode() {
     els.quoteText.style.display = 'none';
     els.customInput.style.display = 'block';
     els.customInput.value = '';
+    els.customCharCount.style.display = 'block';
+    els.customCharCount.textContent = '0/50';
     els.customCorner.textContent = '抽一句▸';
     // 重置打卡状态
     els.checkinSection.style.display = 'block';
     resetCheckinState();
+    // 自定义模式默认勾选朗读打卡
+    els.recordCheck.checked = true;
+    updateCheckinUI();
     // 清空当前语句
     currentQuote = '';
     lastQuoteId = null;
@@ -546,6 +552,7 @@ function exitCustomMode() {
     els.quoteText.style.display = '';
     els.customInput.style.display = 'none';
     els.customInput.value = '';
+    els.customCharCount.style.display = 'none';
     els.customCorner.textContent = '自定义▸';
     // 恢复到没有语句的状态
     currentQuote = '';
@@ -558,6 +565,12 @@ function exitCustomMode() {
     els.rightAction.style.visibility = 'hidden';
     els.rightAction.style.opacity = '0';
 }
+
+// 自定义输入字数统计
+els.customInput.addEventListener('input', () => {
+    const len = els.customInput.value.length;
+    els.customCharCount.textContent = `${len}/50`;
+});
 
 // ===== 喜欢 / 不爱 =====
 
@@ -1924,7 +1937,7 @@ async function renderAdminGarden() {
             if (item.type === 'voice' && audioUrl) {
                 const pathMatch = audioUrl.match(/\/audio\/(.+\.webm)/);
                 if (pathMatch) {
-                    await sb.storage.from('audio').remove([`audio/${pathMatch[1]}`]);
+                    await sb.storage.from('audio').remove([pathMatch[1]]);
                 }
             }
 

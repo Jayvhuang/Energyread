@@ -26,7 +26,8 @@
         <div class="quote-section">
             <div class="quote-card" id="quoteCard">
                 <p class="quote-text" id="quoteText">点击下方按钮，开始你的能量咒语之旅</p>
-                <textarea class="custom-input" id="customInput" placeholder="粘贴或输入你想读的话…" maxlength="200" style="display:none;"></textarea>
+                <textarea class="custom-input" id="customInput" placeholder="粘贴或输入你想读的话…" maxlength="50" style="display:none;"></textarea>
+                <div class="custom-charcount" id="customCharCount" style="display:none;">0/50</div>
                 <span class="custom-corner" id="customCorner">自定义▸</span>
             </div>
             <div class="action-bar" id="actionBar">
@@ -48,7 +49,7 @@
                 <label class="checkbox-label">
                     <input type="checkbox" id="recordCheck">
                     <span class="checkmark"></span>
-                    <span class="label-text">录音打卡</span>
+                    <span class="label-text">朗读打卡</span>
                 </label>
                 <label class="checkbox-label">
                     <input type="checkbox" id="textCheck">
@@ -62,9 +63,9 @@
                 <div class="record-timer" id="recordTimer">00:00 / 00:30</div>
                 <button class="record-btn" id="recordBtn">
                     <span class="record-icon">🎤</span>
-                    <span class="record-label">点击录音</span>
+                    <span class="record-label">点击朗读</span>
                 </button>
-                <p class="record-hint">点击录音，再点停止，最长20秒</p>
+                <p class="record-hint">点击朗读，再点停止，最长录20秒</p>
 
                 <!-- 录音完成后 -->
                 <div class="record-result" id="recordResult" style="display:none;">
