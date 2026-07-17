@@ -535,9 +535,6 @@ function enterCustomMode() {
     // 重置打卡状态
     els.checkinSection.style.display = 'block';
     resetCheckinState();
-    // 自定义模式默认勾选朗读打卡
-    els.recordCheck.checked = true;
-    updateCheckinUI();
     // 清空当前语句
     currentQuote = '';
     lastQuoteId = null;
@@ -705,6 +702,9 @@ async function drawQuote() {
     lastQuoteId = quoteIdMap[idx];
     currentQuote = quotes[idx];
     await updateStat(lastQuoteId, 'draws', 1);
+    // 记录用户自己的抽选次数
+    const prevDraws = getData('lm_draws', 0);
+    setData('lm_draws', prevDraws + 1);
 
     els.quoteText.textContent = currentQuote;
     setData(STORAGE_KEYS.LAST_QUOTE, currentQuote);
@@ -728,7 +728,7 @@ async function drawQuote() {
 }
 
 function resetCheckinState() {
-    els.recordCheck.checked = false;
+    els.recordCheck.checked = true;
     els.textCheck.checked = false;
     els.recordArea.style.display = 'none';
     els.textArea.style.display = 'none';
@@ -1350,9 +1350,9 @@ function renderRecordPage() {
     const checkins = getData(STORAGE_KEYS.CHECKINS, []);
     const thoughts = getData(STORAGE_KEYS.THOUGHTS, []);
 
-    // 统计：抽选次数、打卡次数、打卡天数、连续几天
-    const totalDraws = Object.values(cloudQuoteStats).reduce((sum, s) => sum + (s.draws || 0), 0);
-    els.totalDraws.textContent = totalDraws;
+    // 统计：抽选次数（本地）、打卡次数、打卡天数、连续几天
+    const localDraws = getData('lm_draws', 0);
+    els.totalDraws.textContent = localDraws;
     const uniqueDates = new Set(checkins.map(c => c.date));
     els.totalCheckins.textContent = checkins.length;
     els.totalDays.textContent = uniqueDates.size;
@@ -1962,6 +1962,7 @@ els.clearDataBtn.addEventListener('click', async () => {
     localStorage.removeItem(STORAGE_KEYS.QUOTE_STATS);
     localStorage.removeItem(STORAGE_KEYS.QUOTE_STATS_VERSION);
     localStorage.removeItem(STORAGE_KEYS.USER_PREFS);
+    localStorage.removeItem('lm_draws');
 
     // 清除 IndexedDB
     const allRecs = await getAllRecordings().catch(() => []);
