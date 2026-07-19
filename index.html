@@ -57,6 +57,7 @@
                     <span class="label-text">文字打卡</span>
                 </label>
             </div>
+            <div class="record-hint-text" id="recordHintText" style="display:none;">用你的声音的共振疗愈你的身心，激发你的能量，最好能慢慢做到由内而外的胸腔共鸣</div>
 
             <!-- 录音区域 -->
             <div class="record-area" id="recordArea" style="display:none;">
@@ -65,7 +66,7 @@
                     <span class="record-icon">🎤</span>
                     <span class="record-label">点击朗读</span>
                 </button>
-                <p class="record-hint">点击朗读，再点停止，最长录20秒</p>
+                <p class="record-hint">点击朗读，再点停止</p>
 
                 <!-- 录音完成后 -->
                 <div class="record-result" id="recordResult" style="display:none;">
@@ -77,7 +78,7 @@
                     <label class="checkbox-label garden-opt">
                         <input type="checkbox" id="gardenCheck" checked>
                         <span class="checkmark"></span>
-                        <span class="label-text">匿名发布到今日能量花园</span>
+                        <span class="label-text">发布到能量花园（匿名方式）</span>
                     </label>
                 </div>
             </div>
@@ -89,7 +90,7 @@
                 <label class="checkbox-label garden-opt">
                     <input type="checkbox" id="gardenTextCheck" checked>
                     <span class="checkmark"></span>
-                    <span class="label-text">匿名发布到今日能量花园</span>
+                    <span class="label-text">发布到能量花园（匿名方式）</span>
                 </label>
             </div>
 
@@ -121,8 +122,8 @@
     <!-- 今日能量花园 -->
     <div class="page" id="page-garden">
         <div class="page-header">
-            <h2>今日能量花园</h2>
-            <p class="page-subtitle">感受今天其他人的能量</p>
+            <h2>能量花园</h2>
+            <p class="page-subtitle">感受他人的能量</p>
         </div>
         <div class="garden-list" id="gardenList">
             <div class="empty-garden">今天还没有人发布朗读，来做第一个吧！</div>

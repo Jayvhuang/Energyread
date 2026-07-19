@@ -408,6 +408,7 @@ const els = {
     checkinSection: document.getElementById('checkinSection'),
     recordCheck: document.getElementById('recordCheck'),
     textCheck: document.getElementById('textCheck'),
+    recordHintText: document.getElementById('recordHintText'),
     recordArea: document.getElementById('recordArea'),
     textArea: document.getElementById('textArea'),
     recordBtn: document.getElementById('recordBtn'),
@@ -753,6 +754,7 @@ function updateCheckinUI() {
 
     els.recordArea.style.display = hasRecord ? 'block' : 'none';
     els.textArea.style.display = hasText ? 'block' : 'none';
+    els.recordHintText.style.display = hasRecord ? 'block' : 'none';
 
     if (hasRecord || hasText) {
         els.completeBtn.style.display = 'none';
