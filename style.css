@@ -573,6 +573,26 @@ html, body {
     margin-top: 6px;
 }
 
+.garden-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.garden-like-btn {
+    background: none;
+    border: none;
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 2px 6px;
+    line-height: 1;
+    transition: transform 0.15s;
+}
+
+.garden-like-btn:active {
+    transform: scale(1.2);
+}
+
 .garden-comment-btn {
     background: none;
     border: 1px solid #ddd;
@@ -758,22 +778,6 @@ html, body {
     width: 100%;
     height: 32px;
     border-radius: 16px;
-}
-
-.garden-comment-like {
-    background: none;
-    border: none;
-    font-size: 0.8rem;
-    cursor: pointer;
-    padding: 2px 4px;
-    flex-shrink: 0;
-    align-self: flex-end;
-    line-height: 1;
-    transition: transform 0.15s;
-}
-
-.garden-comment-like:active {
-    transform: scale(1.2);
 }
 
 .garden-comment-input-area {

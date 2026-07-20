@@ -388,13 +388,13 @@ function getDeviceId() {
     return id;
 }
 
-// ===== 评论点赞 =====
-async function fetchCommentLikes(commentIds) {
-    if (!commentIds.length) return {};
+// ===== 能量花园点赞 =====
+async function fetchGardenLikes(gardenItemIds) {
+    if (!gardenItemIds.length) return {};
     const { data, error } = await sb
-        .from('garden_comment_likes')
-        .select('comment_id, device_id')
-        .in('comment_id', commentIds);
+        .from('garden_likes')
+        .select('garden_item_id, device_id')
+        .in('garden_item_id', gardenItemIds);
     if (error) {
         console.warn('加载点赞失败', error);
         return {};
@@ -402,21 +402,20 @@ async function fetchCommentLikes(commentIds) {
     const deviceId = getDeviceId();
     const result = {};
     (data || []).forEach(l => {
-        if (!result[l.comment_id]) result[l.comment_id] = { count: 0, liked: false };
-        result[l.comment_id].count++;
-        if (l.device_id === deviceId) result[l.comment_id].liked = true;
+        if (!result[l.garden_item_id]) result[l.garden_item_id] = { count: 0, liked: false };
+        result[l.garden_item_id].count++;
+        if (l.device_id === deviceId) result[l.garden_item_id].liked = true;
     });
-    // 没有点赞的评论也初始化
-    commentIds.forEach(id => { if (!result[id]) result[id] = { count: 0, liked: false }; });
+    gardenItemIds.forEach(id => { if (!result[id]) result[id] = { count: 0, liked: false }; });
     return result;
 }
 
-async function toggleCommentLike(commentId, currentlyLiked) {
+async function toggleGardenLike(gardenItemId, currentlyLiked) {
     const deviceId = getDeviceId();
     if (currentlyLiked) {
-        await sb.from('garden_comment_likes').delete().eq('comment_id', commentId).eq('device_id', deviceId);
+        await sb.from('garden_likes').delete().eq('garden_item_id', gardenItemId).eq('device_id', deviceId);
     } else {
-        await sb.from('garden_comment_likes').insert({ comment_id: commentId, device_id: deviceId });
+        await sb.from('garden_likes').insert({ garden_item_id: gardenItemId, device_id: deviceId });
     }
 }
 
@@ -1180,12 +1179,7 @@ async function renderGarden() {
     // 加载所有评论和点赞
     const itemIds = items.map(i => i.id);
     const commentsMap = await fetchGardenComments(itemIds);
-    // 收集所有评论 ID
-    const allCommentIds = [];
-    Object.values(commentsMap).forEach(comments => {
-        comments.forEach(c => allCommentIds.push(c.id));
-    });
-    const likesMap = await fetchCommentLikes(allCommentIds);
+    const likesMap = await fetchGardenLikes(itemIds);
 
     items.forEach(item => {
         const div = document.createElement('div');
@@ -1207,24 +1201,26 @@ async function renderGarden() {
         const timeStr = dateStr + ' ' + dt.toTimeString().slice(0, 5);
         const comments = commentsMap[item.id] || [];
         const commentCount = comments.length;
+        const likeInfo = likesMap[item.id] || { count: 0, liked: false };
 
         div.innerHTML = `
             <div class="garden-item-quote">${escapeHtml(item.quote_text)}</div>
             ${contentHtml}
             <div class="garden-item-footer">
                 <span class="garden-item-time">${timeStr}</span>
-                <button class="garden-comment-btn" data-id="${item.id}">💬 ${commentCount > 0 ? commentCount : ''}</button>
+                <div class="garden-item-actions">
+                    <button class="garden-like-btn" data-id="${item.id}">${likeInfo.liked ? '💗' : '🤍'}${likeInfo.count > 0 ? ' ' + likeInfo.count : ''}</button>
+                    <button class="garden-comment-btn" data-id="${item.id}">💬 ${commentCount > 0 ? commentCount : ''}</button>
+                </div>
             </div>
             <div class="garden-comments" id="gardenComments_${item.id}">
                 <div class="garden-comments-list" id="gardenCommentsList_${item.id}">
                     ${comments.map(c => {
                         const nameHtml = c.author_name ? `<span class="garden-comment-name">${escapeHtml(c.author_name)}</span>` : '<span class="garden-comment-name garden-comment-name-anon">?</span>';
-                        const likeInfo = likesMap[c.id] || { count: 0, liked: false };
-                        const likeBtnHtml = `<button class="garden-comment-like ${likeInfo.liked ? 'liked' : ''}" data-comment-id="${c.id}">${likeInfo.liked ? '💗' : '🤍'}${likeInfo.count > 0 ? ' ' + likeInfo.count : ''}</button>`;
                         if (c.type === 'text') {
-                            return `<div class="garden-comment-item">${nameHtml}<div class="garden-comment-bubble">${escapeHtml(c.content || '')}</div>${likeBtnHtml}</div>`;
+                            return `<div class="garden-comment-item">${nameHtml}<div class="garden-comment-bubble">${escapeHtml(c.content || '')}</div></div>`;
                         } else {
-                            return `<div class="garden-comment-item">${nameHtml}<audio class="garden-comment-audio" controls preload="none" src="${c.audio_url || ''}"></audio>${likeBtnHtml}</div>`;
+                            return `<div class="garden-comment-item">${nameHtml}<audio class="garden-comment-audio" controls preload="none" src="${c.audio_url || ''}"></audio></div>`;
                         }
                     }).join('')}
                 </div>
@@ -1389,11 +1385,11 @@ async function renderGarden() {
 
     // 点赞按钮事件代理
     els.gardenList.addEventListener('click', async (e) => {
-        const btn = e.target.closest('.garden-comment-like');
+        const btn = e.target.closest('.garden-like-btn');
         if (!btn) return;
-        const commentId = parseInt(btn.dataset.commentId);
-        const currentlyLiked = btn.classList.contains('liked');
-        await toggleCommentLike(commentId, currentlyLiked);
+        const gardenItemId = parseInt(btn.dataset.id);
+        const currentlyLiked = btn.textContent.includes('💗');
+        await toggleGardenLike(gardenItemId, currentlyLiked);
         renderGarden();
     });
 }
