@@ -64,11 +64,11 @@ html, body {
 .quote-card {
     background: rgba(255,255,255,0.98);
     border-radius: 24px;
-    padding: 32px 24px;
+    padding: 32px 24px 44px;
     margin-bottom: 16px;
     box-shadow: 0 20px 60px rgba(0,0,0,0.2);
     position: relative;
-    min-height: 120px;
+    min-height: 140px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1703,13 +1703,13 @@ html, body {
 .share-card-meta {
     margin-top: auto;
     text-align: center;
-    padding-bottom: 4px;
+    padding: 16px 0 8px;
 }
 
 .share-card-date {
     color: white;
     font-size: 0.75rem;
-    margin-bottom: 6px;
+    margin-bottom: 10px;
     font-weight: 500;
 }
 
@@ -1717,6 +1717,7 @@ html, body {
     color: rgba(255,255,255,0.9);
     font-size: 0.7rem;
     font-weight: 500;
+    margin-bottom: 8px;
 }
 
 .share-card-source {
