@@ -1638,7 +1638,6 @@ html, body {
     position: relative;
     overflow: hidden;
     width: 280px;
-    min-height: 400px;
     display: flex;
     flex-direction: column;
     margin: 0 auto;
@@ -1704,10 +1703,10 @@ html, body {
 .share-card-meta {
     margin-top: auto;
     text-align: center;
-    padding: 20px 0 16px;
+    padding: 20px 0 6px;
     display: flex;
     flex-direction: column;
-    min-height: 100px;
+    gap: 24px;
 }
 
 .share-card-info {
@@ -1730,7 +1729,6 @@ html, body {
 }
 
 .share-card-source-wrap {
-    margin-top: auto;
     display: flex;
     flex-direction: column;
     align-items: center;
