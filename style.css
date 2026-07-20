@@ -1638,6 +1638,7 @@ html, body {
     position: relative;
     overflow: hidden;
     width: 280px;
+    min-height: 400px;
     display: flex;
     flex-direction: column;
     margin: 0 auto;
@@ -1706,7 +1707,7 @@ html, body {
     padding: 20px 0 16px;
     display: flex;
     flex-direction: column;
-    min-height: 150px;
+    min-height: 100px;
 }
 
 .share-card-info {
