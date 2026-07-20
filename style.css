@@ -760,6 +760,22 @@ html, body {
     border-radius: 16px;
 }
 
+.garden-comment-like {
+    background: none;
+    border: none;
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 2px 4px;
+    flex-shrink: 0;
+    align-self: flex-end;
+    line-height: 1;
+    transition: transform 0.15s;
+}
+
+.garden-comment-like:active {
+    transform: scale(1.2);
+}
+
 .garden-comment-input-area {
     background: #f8f8ff;
     border-radius: 12px;

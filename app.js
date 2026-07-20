@@ -378,6 +378,48 @@ async function submitGardenComment(itemId, type, content, audioBlob, authorName)
     return data;
 }
 
+// ===== 设备标识 =====
+function getDeviceId() {
+    let id = localStorage.getItem('lm_device_id');
+    if (!id) {
+        id = 'dev_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+        localStorage.setItem('lm_device_id', id);
+    }
+    return id;
+}
+
+// ===== 评论点赞 =====
+async function fetchCommentLikes(commentIds) {
+    if (!commentIds.length) return {};
+    const { data, error } = await sb
+        .from('garden_comment_likes')
+        .select('comment_id, device_id')
+        .in('comment_id', commentIds);
+    if (error) {
+        console.warn('加载点赞失败', error);
+        return {};
+    }
+    const deviceId = getDeviceId();
+    const result = {};
+    (data || []).forEach(l => {
+        if (!result[l.comment_id]) result[l.comment_id] = { count: 0, liked: false };
+        result[l.comment_id].count++;
+        if (l.device_id === deviceId) result[l.comment_id].liked = true;
+    });
+    // 没有点赞的评论也初始化
+    commentIds.forEach(id => { if (!result[id]) result[id] = { count: 0, liked: false }; });
+    return result;
+}
+
+async function toggleCommentLike(commentId, currentlyLiked) {
+    const deviceId = getDeviceId();
+    if (currentlyLiked) {
+        await sb.from('garden_comment_likes').delete().eq('comment_id', commentId).eq('device_id', deviceId);
+    } else {
+        await sb.from('garden_comment_likes').insert({ comment_id: commentId, device_id: deviceId });
+    }
+}
+
 function setData(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
 }
@@ -1135,9 +1177,15 @@ async function renderGarden() {
         return;
     }
 
-    // 加载所有评论
+    // 加载所有评论和点赞
     const itemIds = items.map(i => i.id);
     const commentsMap = await fetchGardenComments(itemIds);
+    // 收集所有评论 ID
+    const allCommentIds = [];
+    Object.values(commentsMap).forEach(comments => {
+        comments.forEach(c => allCommentIds.push(c.id));
+    });
+    const likesMap = await fetchCommentLikes(allCommentIds);
 
     items.forEach(item => {
         const div = document.createElement('div');
@@ -1171,10 +1219,12 @@ async function renderGarden() {
                 <div class="garden-comments-list" id="gardenCommentsList_${item.id}">
                     ${comments.map(c => {
                         const nameHtml = c.author_name ? `<span class="garden-comment-name">${escapeHtml(c.author_name)}</span>` : '<span class="garden-comment-name garden-comment-name-anon">?</span>';
+                        const likeInfo = likesMap[c.id] || { count: 0, liked: false };
+                        const likeBtnHtml = `<button class="garden-comment-like ${likeInfo.liked ? 'liked' : ''}" data-comment-id="${c.id}">${likeInfo.liked ? '💗' : '🤍'}${likeInfo.count > 0 ? ' ' + likeInfo.count : ''}</button>`;
                         if (c.type === 'text') {
-                            return `<div class="garden-comment-item">${nameHtml}<div class="garden-comment-bubble">${escapeHtml(c.content || '')}</div></div>`;
+                            return `<div class="garden-comment-item">${nameHtml}<div class="garden-comment-bubble">${escapeHtml(c.content || '')}</div>${likeBtnHtml}</div>`;
                         } else {
-                            return `<div class="garden-comment-item">${nameHtml}<audio class="garden-comment-audio" controls preload="none" src="${c.audio_url || ''}"></audio></div>`;
+                            return `<div class="garden-comment-item">${nameHtml}<audio class="garden-comment-audio" controls preload="none" src="${c.audio_url || ''}"></audio>${likeBtnHtml}</div>`;
                         }
                     }).join('')}
                 </div>
@@ -1335,6 +1385,16 @@ async function renderGarden() {
             const result = await submitGardenComment(item.id, 'voice', null, currentVoiceBlob, name);
             if (result) renderGarden();
         });
+    });
+
+    // 点赞按钮事件代理
+    els.gardenList.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.garden-comment-like');
+        if (!btn) return;
+        const commentId = parseInt(btn.dataset.commentId);
+        const currentlyLiked = btn.classList.contains('liked');
+        await toggleCommentLike(commentId, currentlyLiked);
+        renderGarden();
     });
 }
 
