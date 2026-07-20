@@ -201,8 +201,9 @@ html, body {
     position: absolute;
     bottom: 8px;
     right: 14px;
-    font-size: 0.85rem;
-    color: #888;
+    font-size: 0.9rem;
+    color: #666;
+    font-weight: 600;
     cursor: pointer;
     transition: color 0.2s;
     user-select: none;
@@ -1719,9 +1720,16 @@ html, body {
 }
 
 .share-card-source {
-    color: rgba(255,255,255,0.6);
-    font-size: 0.6rem;
-    margin-top: 4px;
+    color: rgba(255,255,255,0.9);
+    font-size: 0.7rem;
+    font-weight: 500;
+    margin-top: 6px;
+}
+
+.share-card-source-link {
+    color: rgba(255,255,255,0.9);
+    font-size: 0.7rem;
+    font-weight: 500;
 }
 
 /* ===== 投稿入口 ===== */
