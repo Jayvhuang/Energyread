@@ -1703,13 +1703,22 @@ html, body {
 .share-card-meta {
     margin-top: auto;
     text-align: center;
-    padding: 16px 0 8px;
+    padding: 20px 0 10px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100px;
+}
+
+.share-card-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
 }
 
 .share-card-date {
     color: white;
     font-size: 0.75rem;
-    margin-bottom: 10px;
     font-weight: 500;
 }
 
@@ -1717,14 +1726,20 @@ html, body {
     color: rgba(255,255,255,0.9);
     font-size: 0.7rem;
     font-weight: 500;
-    margin-bottom: 8px;
+}
+
+.share-card-source-wrap {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
 }
 
 .share-card-source {
     color: rgba(255,255,255,0.9);
     font-size: 0.7rem;
     font-weight: 500;
-    margin-top: 6px;
 }
 
 .share-card-source-link {
