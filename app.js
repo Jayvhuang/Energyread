@@ -2176,8 +2176,11 @@ async function init() {
         // 检查今天是否已打卡
         if (hasCheckedInToday()) {
             els.homeSubtitle.textContent = '今日已完成打卡，可以再抽一句';
-            // 显示已完成状态
+            // 显示已完成状态，隐藏所有打卡选项和录音/文字区域
             els.checkinSection.querySelector('.checkin-options').style.display = 'none';
+            els.recordArea.style.display = 'none';
+            els.textArea.style.display = 'none';
+            els.recordHintText.style.display = 'none';
             els.completeBtn.style.display = 'none';
             els.submitCheckinBtn.style.display = 'none';
             els.checkinDone.style.display = 'block';

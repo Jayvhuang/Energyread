@@ -1703,10 +1703,10 @@ html, body {
 .share-card-meta {
     margin-top: auto;
     text-align: center;
-    padding: 20px 0 10px;
+    padding: 20px 0 16px;
     display: flex;
     flex-direction: column;
-    min-height: 100px;
+    min-height: 150px;
 }
 
 .share-card-info {
