@@ -1189,9 +1189,9 @@ async function renderGarden() {
         const hasText = !!item.content;
         let contentHtml = '';
         if (hasAudio && hasText) {
-            contentHtml = `<audio class="garden-item-audio" controls preload="none" src="${item.audio_url}"></audio><div class="garden-item-text" style="margin-top:6px;">${escapeHtml(item.content)}</div>`;
+            contentHtml = `<audio class="garden-item-audio" controls preload="none" src="${item.audio_url}"></audio><div class="garden-item-text" style="margin-top:6px;">💭 此刻感受<br>${escapeHtml(item.content)}</div>`;
         } else if (hasText) {
-            contentHtml = `<div class="garden-item-text">${escapeHtml(item.content)}</div>`;
+            contentHtml = `<div class="garden-item-text">💭 此刻感受<br>${escapeHtml(item.content)}</div>`;
         } else if (hasAudio) {
             contentHtml = `<audio class="garden-item-audio" controls preload="none" src="${item.audio_url}"></audio>`;
         }
