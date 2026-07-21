@@ -770,6 +770,7 @@ async function drawQuote() {
 function resetCheckinState() {
     els.recordCheck.checked = true;
     els.recordArea.style.display = 'none';
+    els.textArea.style.display = '';
     els.completeBtn.style.display = 'none';
     els.submitCheckinBtn.style.display = 'none';
     els.checkinDone.style.display = 'none';
