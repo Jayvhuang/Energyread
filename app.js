@@ -434,6 +434,7 @@ let mediaRecorder = null;
 let recordedChunks = [];
 let currentRecordingBlob = null;
 let currentImageBlob = null;
+let isCheckinInProgress = false;
 let recordingStartTime = 0;
 let recordingTimer = null;
 let maxRecordSeconds = 20;
@@ -948,8 +949,21 @@ els.imageRemoveBtn.addEventListener('click', () => {
 });
 
 // ===== 完成打卡 =====
-els.completeBtn.addEventListener('click', () => finishCheckin('silent'));
+els.completeBtn.addEventListener('click', () => {
+    if (isCheckinInProgress) return;
+    isCheckinInProgress = true;
+    // 不勾朗读时，检测是否有文字或图片，有则传递类型
+    const hasText = els.thoughtInput.value.trim().length > 0;
+    const hasImage = currentImageBlob !== null;
+    let checkType = 'silent';
+    if (hasText && hasImage) checkType = 'text';
+    else if (hasText) checkType = 'text';
+    else if (hasImage) checkType = 'text'; // 用 text 类型但图片通过 imageUrl 附带
+    finishCheckin(checkType).finally(() => { isCheckinInProgress = false; });
+});
 els.submitCheckinBtn.addEventListener('click', () => {
+    if (isCheckinInProgress) return;
+    isCheckinInProgress = true;
     const hasRecord = els.recordCheck.checked;
     const hasText = els.thoughtInput.value.trim().length > 0;
     const hasImage = currentImageBlob !== null;
@@ -1087,6 +1101,9 @@ async function finishCheckin(type) {
     els.checkinSection.querySelector('.checkin-options').style.display = 'none';
     els.recordArea.style.display = 'none';
     els.textArea.style.display = 'none';
+    els.imagePreview.style.display = 'none';
+    els.imagePreviewImg.src = '';
+    els.gardenOptWrap.style.display = 'none';
     els.completeBtn.style.display = 'none';
     els.submitCheckinBtn.style.display = 'none';
     els.checkinDone.style.display = 'block';
@@ -1102,6 +1119,7 @@ async function finishCheckin(type) {
 
     // 刷新记录页面
     renderRecordPage();
+    isCheckinInProgress = false;
 }
 
 function hasCheckedInToday() {
