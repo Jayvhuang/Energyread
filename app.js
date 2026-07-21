@@ -456,6 +456,7 @@ const els = {
     imagePreview: document.getElementById('imagePreview'),
     imagePreviewImg: document.getElementById('imagePreviewImg'),
     imageRemoveBtn: document.getElementById('imageRemoveBtn'),
+    imageArea: document.getElementById('imageArea'),
     gardenOptWrap: document.getElementById('gardenOptWrap'),
     recordArea: document.getElementById('recordArea'),
     textArea: document.getElementById('textArea'),
@@ -785,6 +786,7 @@ function resetCheckinState() {
     els.recordPlayer.src = '';
     els.gardenCheck.checked = true;
     els.recordTimer.textContent = '00:00 / 00:20';
+    els.imageArea.style.display = 'block';
     els.imagePreview.style.display = 'none';
     els.imagePreviewImg.src = '';
     els.gardenOptWrap.style.display = 'none';
@@ -1101,6 +1103,7 @@ async function finishCheckin(type) {
     els.checkinSection.querySelector('.checkin-options').style.display = 'none';
     els.recordArea.style.display = 'none';
     els.textArea.style.display = 'none';
+    els.imageArea.style.display = 'none';
     els.imagePreview.style.display = 'none';
     els.imagePreviewImg.src = '';
     els.gardenOptWrap.style.display = 'none';
