@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>能量咒语 · 每日朗读</title>
-    <link rel="stylesheet" href="style.css?v=10">
+    <link rel="stylesheet" href="style.css?v=11">
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
@@ -51,11 +51,6 @@
                     <span class="checkmark"></span>
                     <span class="label-text">朗读打卡</span>
                 </label>
-                <label class="checkbox-label">
-                    <input type="checkbox" id="textCheck">
-                    <span class="checkmark"></span>
-                    <span class="label-text">文字打卡</span>
-                </label>
             </div>
             <div class="record-hint-text" id="recordHintText" style="display:none;">用你的声音的共振疗愈你的身心，激发你的能量，最好能慢慢做到由内而外的胸腔共鸣</div>
 
@@ -75,27 +70,34 @@
                         <button class="btn-small" id="reRecordBtn">重新录</button>
                         <button class="btn-small btn-save" id="saveRecordBtn">💾 保存到手机</button>
                     </div>
-                    <label class="checkbox-label garden-opt">
-                        <input type="checkbox" id="gardenCheck" checked>
-                        <span class="checkmark"></span>
-                        <span class="label-text">传递你的能量到能量花园（匿名方式）</span>
-                    </label>
                 </div>
             </div>
 
-            <!-- 文字区域 -->
-            <div class="text-area" id="textArea" style="display:none;">
-                <textarea class="thought-input" id="thoughtInput" placeholder="写下你此刻的感受..." maxlength="600"></textarea>
-                <div class="char-count"><span id="charCount">0</span>/600</div>
-                <label class="checkbox-label garden-opt">
-                    <input type="checkbox" id="gardenTextCheck" checked>
-                    <span class="checkmark"></span>
-                    <span class="label-text">传递你的能量到能量花园（匿名方式）</span>
-                </label>
+            <!-- 图片上传 -->
+            <div class="image-area" id="imageArea">
+                <input type="file" accept="image/*" id="imageInput" style="display:none;">
+                <button class="image-upload-btn" id="imageUploadBtn">📷 上传图片</button>
+                <div class="image-preview" id="imagePreview" style="display:none;">
+                    <img id="imagePreviewImg" class="image-preview-img">
+                    <button class="image-remove-btn" id="imageRemoveBtn">✕ 移除</button>
+                </div>
             </div>
 
+            <!-- 文字区域（常驻显示） -->
+            <div class="text-area" id="textArea">
+                <textarea class="thought-input" id="thoughtInput" placeholder="写下你此刻的感受..." maxlength="600"></textarea>
+                <div class="char-count"><span id="charCount">0</span>/600</div>
+            </div>
+
+            <!-- 传递到花园 -->
+            <label class="checkbox-label garden-opt" id="gardenOptWrap" style="display:none;">
+                <input type="checkbox" id="gardenCheck" checked>
+                <span class="checkmark"></span>
+                <span class="label-text">传递你的能量到能量花园（匿名方式）</span>
+            </label>
+
             <!-- 完成按钮 -->
-            <button class="btn-primary btn-complete" id="completeBtn" style="display:none;">默念完成</button>
+            <button class="btn-primary btn-complete" id="completeBtn" style="display:none;">默念打卡</button>
             <button class="btn-primary btn-complete" id="submitCheckinBtn" style="display:none;">完成打卡</button>
 
             <!-- 打卡完成后 -->
@@ -327,6 +329,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=7"></script>
+    <script src="app.js?v=8"></script>
 </body>
 </html>

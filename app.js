@@ -322,7 +322,7 @@ async function uploadAudioToCloud(blob, id) {
 async function fetchCloudGarden() {
     const { data, error } = await sb
         .from('garden_items')
-        .select('id, quote_text, type, content, audio_url, created_at')
+        .select('id, quote_text, type, content, audio_url, image_url, created_at')
         .gt('created_at', new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false });
     if (error) {
@@ -433,6 +433,7 @@ let lastQuoteId = null;
 let mediaRecorder = null;
 let recordedChunks = [];
 let currentRecordingBlob = null;
+let currentImageBlob = null;
 let recordingStartTime = 0;
 let recordingTimer = null;
 let maxRecordSeconds = 20;
@@ -448,8 +449,13 @@ const els = {
     drawBtn: document.getElementById('drawBtn'),
     checkinSection: document.getElementById('checkinSection'),
     recordCheck: document.getElementById('recordCheck'),
-    textCheck: document.getElementById('textCheck'),
     recordHintText: document.getElementById('recordHintText'),
+    imageInput: document.getElementById('imageInput'),
+    imageUploadBtn: document.getElementById('imageUploadBtn'),
+    imagePreview: document.getElementById('imagePreview'),
+    imagePreviewImg: document.getElementById('imagePreviewImg'),
+    imageRemoveBtn: document.getElementById('imageRemoveBtn'),
+    gardenOptWrap: document.getElementById('gardenOptWrap'),
     recordArea: document.getElementById('recordArea'),
     textArea: document.getElementById('textArea'),
     recordBtn: document.getElementById('recordBtn'),
@@ -459,7 +465,6 @@ const els = {
     reRecordBtn: document.getElementById('reRecordBtn'),
     saveRecordBtn: document.getElementById('saveRecordBtn'),
     gardenCheck: document.getElementById('gardenCheck'),
-    gardenTextCheck: document.getElementById('gardenTextCheck'),
     thoughtInput: document.getElementById('thoughtInput'),
     charCount: document.getElementById('charCount'),
     completeBtn: document.getElementById('completeBtn'),
@@ -764,9 +769,7 @@ async function drawQuote() {
 
 function resetCheckinState() {
     els.recordCheck.checked = true;
-    els.textCheck.checked = false;
     els.recordArea.style.display = 'none';
-    els.textArea.style.display = 'none';
     els.completeBtn.style.display = 'none';
     els.submitCheckinBtn.style.display = 'none';
     els.checkinDone.style.display = 'none';
@@ -774,30 +777,32 @@ function resetCheckinState() {
     els.thoughtInput.value = '';
     els.charCount.textContent = '0';
     currentRecordingBlob = null;
+    currentImageBlob = null;
     els.recordPlayer.src = '';
     els.gardenCheck.checked = true;
-    els.gardenTextCheck.checked = true;
     els.recordTimer.textContent = '00:00 / 00:20';
+    els.imagePreview.style.display = 'none';
+    els.imagePreviewImg.src = '';
+    els.gardenOptWrap.style.display = 'none';
     // 恢复打卡选项的显示
     const options = els.checkinSection.querySelector('.checkin-options');
     if (options) options.style.display = '';
-    // 恢复默认按钮状态（显示默念完成按钮）
+    // 恢复默认按钮状态
     updateCheckinUI();
 }
 
 // ===== 打卡选项切换 =====
 els.recordCheck.addEventListener('change', updateCheckinUI);
-els.textCheck.addEventListener('change', updateCheckinUI);
 
 function updateCheckinUI() {
     const hasRecord = els.recordCheck.checked;
-    const hasText = els.textCheck.checked;
+    const hasText = els.thoughtInput.value.trim().length > 0;
+    const hasImage = currentImageBlob !== null;
 
     els.recordArea.style.display = hasRecord ? 'block' : 'none';
-    els.textArea.style.display = hasText ? 'block' : 'none';
     els.recordHintText.style.display = hasRecord ? 'block' : 'none';
 
-    if (hasRecord || hasText) {
+    if (hasRecord) {
         els.completeBtn.style.display = 'none';
         els.submitCheckinBtn.style.display = 'block';
         els.submitCheckinBtn.textContent = '完成打卡';
@@ -805,6 +810,9 @@ function updateCheckinUI() {
         els.completeBtn.style.display = 'block';
         els.submitCheckinBtn.style.display = 'none';
     }
+
+    // 传递到花园：有录音/文字/图片时才显示
+    els.gardenOptWrap.style.display = (hasRecord || hasText || hasImage) ? 'flex' : 'none';
 
     // 重置录音状态
     if (!hasRecord) {
@@ -895,13 +903,53 @@ els.saveRecordBtn.addEventListener('click', () => {
 // ===== 文字输入计数 =====
 els.thoughtInput.addEventListener('input', () => {
     els.charCount.textContent = els.thoughtInput.value.length;
+    updateCheckinUI();
+});
+
+// ===== 图片上传 =====
+els.imageUploadBtn.addEventListener('click', () => els.imageInput.click());
+
+els.imageInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    // 压缩图片
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let { width, height } = img;
+            if (width > 1200) { height = Math.round(height * 1200 / width); width = 1200; }
+            if (height > 1200) { width = Math.round(width * 1200 / height); height = 1200; }
+            canvas.width = width; canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            canvas.toBlob((blob) => {
+                currentImageBlob = blob;
+                els.imagePreviewImg.src = URL.createObjectURL(blob);
+                els.imagePreview.style.display = 'block';
+                updateCheckinUI();
+            }, 'image/jpeg', 0.8);
+        };
+        img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+    els.imageInput.value = '';
+});
+
+els.imageRemoveBtn.addEventListener('click', () => {
+    currentImageBlob = null;
+    els.imagePreview.style.display = 'none';
+    els.imagePreviewImg.src = '';
+    updateCheckinUI();
 });
 
 // ===== 完成打卡 =====
 els.completeBtn.addEventListener('click', () => finishCheckin('silent'));
 els.submitCheckinBtn.addEventListener('click', () => {
     const hasRecord = els.recordCheck.checked;
-    const hasText = els.textCheck.checked;
+    const hasText = els.thoughtInput.value.trim().length > 0;
+    const hasImage = currentImageBlob !== null;
 
     if (hasRecord && !currentRecordingBlob) {
         alert('请先完成录音');
@@ -943,6 +991,7 @@ async function finishCheckin(type) {
         type: type,
         hasVoice: type === 'voice' || type === 'both',
         hasText: type === 'text' || type === 'both',
+        hasImage: currentImageBlob !== null,
         isCustom: isCustomMode
     };
 
@@ -1005,29 +1054,27 @@ async function finishCheckin(type) {
         setData(STORAGE_KEYS.THOUGHTS, thoughts);
     }
 
-    // 提交能量花园：如果是 both 类型，合并为一条记录
-    const shouldSubmitToGarden = els.gardenCheck.checked || els.gardenTextCheck.checked;
-    if (shouldSubmitToGarden && currentQuote) {
-        try {
-            if (type === 'both') {
-                // 同时有录音和文字 → 合并为一条，type 用 voice 并附带文字
-                const insertData = { quote_text: currentQuote, type: 'voice' };
-                if (audioUrlForGarden) insertData.audio_url = audioUrlForGarden;
-                if (thoughtTextForGarden) insertData.content = thoughtTextForGarden;
-                await sb.from('garden_items').insert(insertData);
-            } else if (type === 'voice' && els.gardenCheck.checked && audioUrlForGarden) {
-            await sb.from('garden_items').insert({
-                quote_text: currentQuote,
-                type: 'voice',
-                audio_url: audioUrlForGarden
-            });
-        } else if (type === 'text' && els.gardenTextCheck.checked && thoughtTextForGarden) {
-            await sb.from('garden_items').insert({
-                quote_text: currentQuote,
-                type: 'text',
-                content: thoughtTextForGarden
-            });
+    // 上传图片到云端
+    let imageUrlForGarden = null;
+    if (currentImageBlob && els.gardenCheck.checked) {
+        const imgPath = `images/${Date.now()}.jpg`;
+        const { error: imgUploadError } = await sb.storage
+            .from('images')
+            .upload(imgPath, currentImageBlob, { contentType: 'image/jpeg', upsert: true });
+        if (!imgUploadError) {
+            const { data } = sb.storage.from('images').getPublicUrl(imgPath);
+            imageUrlForGarden = data.publicUrl;
         }
+    }
+
+    // 提交能量花园：合并为一条记录
+    if (els.gardenCheck.checked && currentQuote) {
+        try {
+            const insertData = { quote_text: currentQuote, type: 'voice' };
+            if (audioUrlForGarden) insertData.audio_url = audioUrlForGarden;
+            if (thoughtTextForGarden) insertData.content = thoughtTextForGarden;
+            if (imageUrlForGarden) insertData.image_url = imageUrlForGarden;
+            await sb.from('garden_items').insert(insertData);
         } catch (err) {
             console.warn('提交能量花园失败', err);
         }
@@ -1187,6 +1234,7 @@ async function renderGarden() {
 
         const hasAudio = !!item.audio_url;
         const hasText = !!item.content;
+        const hasImage = !!item.image_url;
         let contentHtml = '';
         if (hasAudio && hasText) {
             contentHtml = `<audio class="garden-item-audio" controls preload="none" src="${item.audio_url}"></audio><div class="garden-item-text" style="margin-top:6px;">💭 此刻感受<br>${escapeHtml(item.content)}</div>`;
@@ -1194,6 +1242,9 @@ async function renderGarden() {
             contentHtml = `<div class="garden-item-text">💭 此刻感受<br>${escapeHtml(item.content)}</div>`;
         } else if (hasAudio) {
             contentHtml = `<audio class="garden-item-audio" controls preload="none" src="${item.audio_url}"></audio>`;
+        }
+        if (hasImage) {
+            contentHtml += `<img class="garden-item-image" src="${item.image_url}" alt="打卡图片" onclick="window.open('${item.image_url}','_blank')">`;
         }
 
         const dt = new Date(item.created_at);
@@ -1955,8 +2006,9 @@ async function renderAdminGarden() {
         div.className = 'admin-garden-item';
 
         const hasBoth = item.type === 'voice' && item.content;
+        const hasImage = !!item.image_url;
         const isVoice = item.type === 'voice';
-        const typeText = hasBoth ? '融合' : (isVoice ? '录音' : '文字');
+        const typeText = hasImage ? '图片' : (hasBoth ? '融合' : (isVoice ? '录音' : '文字'));
 
         const typeHtml = `<span class="admin-garden-type ${isVoice ? 'voice' : 'text'}">${typeText}</span>`;
 
@@ -1967,7 +2019,7 @@ async function renderAdminGarden() {
             ${typeHtml}
             <span class="admin-garden-quote">${escapeHtml(item.quote_text)}</span>
             <span class="admin-garden-time">${timeStr}</span>
-            <button class="admin-garden-delete" data-id="${item.id}" data-type="${item.type}" data-audiourl="${item.audio_url || ''}">删除</button>
+            <button class="admin-garden-delete" data-id="${item.id}" data-type="${item.type}" data-audiourl="${item.audio_url || ''}" data-imageurl="${item.image_url || ''}">删除</button>
         `;
 
         // 绑定删除事件
@@ -1976,6 +2028,7 @@ async function renderAdminGarden() {
             if (!confirm('确定删除这条能量花园记录吗？')) return;
             const id = deleteBtn.dataset.id;
             const audioUrl = deleteBtn.dataset.audiourl;
+            const imageUrl = deleteBtn.dataset.imageurl;
 
             // 从 DB 删除记录
             const { error } = await sb.from('garden_items').delete().eq('id', id);
@@ -1984,12 +2037,14 @@ async function renderAdminGarden() {
                 return;
             }
 
-            // 如果是录音，从 Storage 删除音频文件
-            if (item.type === 'voice' && audioUrl) {
-                const pathMatch = audioUrl.match(/\/audio\/(.+\.webm)/);
-                if (pathMatch) {
-                    await sb.storage.from('audio').remove([pathMatch[1]]);
-                }
+            // 从 Storage 删除文件
+            if (audioUrl) {
+                const pathMatch = audioUrl.match(/\/audio\/(.+)/);
+                if (pathMatch) await sb.storage.from('audio').remove([pathMatch[1]]);
+            }
+            if (imageUrl) {
+                const imgMatch = imageUrl.match(/\/images\/(.+)/);
+                if (imgMatch) await sb.storage.from('images').remove([imgMatch[1]]);
             }
 
             renderAdminGarden();
@@ -2107,7 +2162,7 @@ async function cleanupCloudData() {
         // 查出要删除的旧花园记录 ID
         const { data: oldItems } = await sb
             .from('garden_items')
-            .select('id, audio_url')
+            .select('id, audio_url, image_url')
             .lt('created_at', cutoff);
         if (!oldItems || oldItems.length === 0) return;
 
@@ -2125,6 +2180,8 @@ async function cleanupCloudData() {
         oldItems.forEach(i => {
             const m = i.audio_url?.match(/\/audio\/(.+)/);
             if (m) allPaths.push(m[1]);
+            const img = i.image_url?.match(/\/images\/(.+)/);
+            if (img) allPaths.push(img[1]);
         });
         (oldComments || []).forEach(c => {
             const m = c.audio_url?.match(/\/audio\/(.+)/);
