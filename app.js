@@ -973,6 +973,7 @@ els.submitCheckinBtn.addEventListener('click', () => {
 
     if (hasRecord && !currentRecordingBlob) {
         alert('请先完成录音');
+        isCheckinInProgress = false;
         return;
     }
 
@@ -981,7 +982,7 @@ els.submitCheckinBtn.addEventListener('click', () => {
     else if (hasRecord) type = 'voice';
     else if (hasText) type = 'text';
 
-    finishCheckin(type);
+    finishCheckin(type).finally(() => { isCheckinInProgress = false; });
 });
 
 async function finishCheckin(type) {
