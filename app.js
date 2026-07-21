@@ -1108,7 +1108,6 @@ async function finishCheckin(type) {
     els.imageArea.style.display = 'none';
     els.imageUploadBtn.style.display = 'none';
     els.imagePreview.style.display = 'none';
-    els.imagePreviewImg.src = '';
     els.gardenOptWrap.style.display = 'none';
     els.completeBtn.style.display = 'none';
     els.submitCheckinBtn.style.display = 'none';
