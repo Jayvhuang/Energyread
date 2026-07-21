@@ -1823,6 +1823,40 @@ els.addQuoteBtn.addEventListener('click', async () => {
     alert('已新增语句');
 });
 
+// 批量导入
+document.getElementById('batchImportBtn').addEventListener('click', async () => {
+    const text = document.getElementById('batchImportInput').value.trim();
+    if (!text) { alert('请先粘贴要导入的语句'); return; }
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    if (lines.length === 0) { alert('没有有效的语句'); return; }
+    const batchSize = 50;
+    let success = 0;
+    for (let i = 0; i < lines.length; i += batchSize) {
+        const batch = lines.slice(i, i + batchSize).map(text => ({ text }));
+        const { error } = await sb.from('quotes').insert(batch);
+        if (error) { alert('导入失败：' + error.message); return; }
+        success += batch.length;
+    }
+    document.getElementById('batchImportInput').value = '';
+    await loadQuotes();
+    renderAdminQuotes();
+    alert(`✅ 成功导入 ${success} 条语句`);
+});
+
+// 导出语句
+document.getElementById('exportQuotesBtn').addEventListener('click', () => {
+    const text = quotes.join('\n');
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `能量咒语库_${new Date().toISOString().slice(0,10)}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
+
 // 表头列排序
 els.adminColSorts.forEach(col => {
     col.addEventListener('click', () => {
@@ -2006,12 +2040,22 @@ async function renderAdminGarden() {
         const div = document.createElement('div');
         div.className = 'admin-garden-item';
 
-        const hasBoth = item.type === 'voice' && item.content;
+        const hasAudio = !!item.audio_url;
+        const hasText = !!item.content;
         const hasImage = !!item.image_url;
-        const isVoice = item.type === 'voice';
-        const typeText = hasImage ? '图片' : (hasBoth ? '融合' : (isVoice ? '录音' : '文字'));
-
-        const typeHtml = `<span class="admin-garden-type ${isVoice ? 'voice' : 'text'}">${typeText}</span>`;
+        let typeText, typeClass;
+        if (hasImage && (hasAudio || hasText)) {
+            typeText = '融合'; typeClass = 'voice';
+        } else if (hasImage) {
+            typeText = '图片'; typeClass = 'voice';
+        } else if (hasAudio && hasText) {
+            typeText = '融合'; typeClass = 'voice';
+        } else if (hasAudio) {
+            typeText = '录音'; typeClass = 'voice';
+        } else {
+            typeText = '文字'; typeClass = 'text';
+        }
+        const typeHtml = `<span class="admin-garden-type ${typeClass}">${typeText}</span>`;
 
         const dt = new Date(item.created_at);
         const timeStr = `${dt.getMonth()+1}月${dt.getDate()}日 ${dt.toTimeString().slice(0, 5)}`;

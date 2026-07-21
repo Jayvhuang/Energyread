@@ -224,6 +224,13 @@
             </div>
 
             <div class="admin-panel">
+                <h3>批量导入</h3>
+                <textarea class="admin-input" id="batchImportInput" placeholder="每行一条语句，粘贴后点击批量导入..." style="min-height:120px;"></textarea>
+                <button class="btn-primary admin-add-btn" id="batchImportBtn" style="margin-top:8px;">批量导入</button>
+                <button class="btn-secondary" id="exportQuotesBtn" style="margin-top:8px;width:100%;">📥 导出所有语句</button>
+            </div>
+
+            <div class="admin-panel">
                 <div class="admin-toolbar">
                     <h3>语句列表</h3>
                     <span id="adminQuoteCount">0 条</span>
@@ -329,6 +336,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=9"></script>
+    <script src="app.js?v=10"></script>
 </body>
 </html>
