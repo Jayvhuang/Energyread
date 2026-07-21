@@ -787,6 +787,7 @@ function resetCheckinState() {
     els.gardenCheck.checked = true;
     els.recordTimer.textContent = '00:00 / 00:20';
     els.imageArea.style.display = 'block';
+    els.imageUploadBtn.style.display = 'inline-block';
     els.imagePreview.style.display = 'none';
     els.imagePreviewImg.src = '';
     els.gardenOptWrap.style.display = 'none';
@@ -1104,6 +1105,7 @@ async function finishCheckin(type) {
     els.recordArea.style.display = 'none';
     els.textArea.style.display = 'none';
     els.imageArea.style.display = 'none';
+    els.imageUploadBtn.style.display = 'none';
     els.imagePreview.style.display = 'none';
     els.imagePreviewImg.src = '';
     els.gardenOptWrap.style.display = 'none';
