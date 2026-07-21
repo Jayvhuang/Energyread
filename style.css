@@ -1759,6 +1759,16 @@ html, body {
     letter-spacing: 2px;
 }
 
+.share-card-image {
+    width: 240px;
+    max-width: 90%;
+    border-radius: 12px;
+    margin: 12px auto 0;
+    display: block;
+    object-fit: contain;
+    max-height: 300px;
+}
+
 .share-card-meta {
     margin-top: auto;
     text-align: center;

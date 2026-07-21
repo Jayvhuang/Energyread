@@ -472,6 +472,7 @@ const els = {
     checkinDone: document.getElementById('checkinDone'),
     shareQuoteBtn: document.getElementById('shareQuoteBtn'),
     shareThoughtBtn: document.getElementById('shareThoughtBtn'),
+    shareImageBtn: document.getElementById('shareImageBtn'),
     todayCount: document.getElementById('todayCount'),
     countNum: document.getElementById('countNum'),
     gardenList: document.getElementById('gardenList'),
@@ -490,6 +491,7 @@ const els = {
     shareCard: document.getElementById('shareCard'),
     shareCardQuote: document.getElementById('shareCardQuote'),
     shareCardThought: document.getElementById('shareCardThought'),
+    shareCardImage: document.getElementById('shareCardImage'),
     shareCardDate: document.getElementById('shareCardDate'),
     saveCardBtn: document.getElementById('saveCardBtn'),
     closeModalBtn: document.getElementById('closeModalBtn'),
@@ -1093,6 +1095,7 @@ async function finishCheckin(type) {
     els.shareQuoteBtn.style.display = 'inline-block';
     const hasThought = els.thoughtInput.value.trim().length > 0;
     els.shareThoughtBtn.style.display = hasThought ? 'inline-block' : 'none';
+    els.shareImageBtn.style.display = currentImageBlob ? 'inline-block' : 'none';
 
     // 更新今日人数
     await updateTodayCount();
@@ -1128,6 +1131,7 @@ async function updateTodayCount() {
 // ===== 分享卡片 =====
 els.shareQuoteBtn.addEventListener('click', () => showShareCard(false));
 els.shareThoughtBtn.addEventListener('click', () => showShareCard(true));
+els.shareImageBtn.addEventListener('click', () => showShareCard('image'));
 els.closeModalBtn.addEventListener('click', () => els.shareModal.style.display = 'none');
 els.saveCardBtn.addEventListener('click', saveShareCard);
 
@@ -1139,12 +1143,20 @@ function showShareCard(includeThought) {
     const day = String(now.getDate()).padStart(2, '0');
     els.shareCardDate.textContent = `${year}年${month}月${day}日`;
 
-    if (includeThought) {
-        const thought = els.thoughtInput.value.trim();
-        els.shareCardThought.textContent = '我：' + thought;
-        els.shareCardThought.style.display = 'block';
-    } else {
+    if (includeThought === 'image') {
         els.shareCardThought.style.display = 'none';
+        els.shareCardImage.style.display = 'block';
+        els.shareCardImage.src = els.imagePreviewImg.src;
+    } else {
+        els.shareCardImage.style.display = 'none';
+        els.shareCardImage.src = '';
+        if (includeThought) {
+            const thought = els.thoughtInput.value.trim();
+            els.shareCardThought.textContent = '我：' + thought;
+            els.shareCardThought.style.display = 'block';
+        } else {
+            els.shareCardThought.style.display = 'none';
+        }
     }
 
     els.shareModal.style.display = 'flex';
@@ -1845,12 +1857,28 @@ document.getElementById('batchImportBtn').addEventListener('click', async () => 
 
 // 导出语句
 document.getElementById('exportQuotesBtn').addEventListener('click', () => {
-    const text = quotes.join('\n');
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    // 生成 CSV 格式，包含所有统计数据
+    const BOM = '﻿'; // UTF-8 BOM for Excel
+    const header = '语句内容,抽中次数,喜欢次数,不爱次数,打卡次数,状态,来源';
+    const rows = quotes.map((q, i) => {
+        const id = quoteIdMap[i];
+        const stat = cloudQuoteStats[id] || {};
+        const status = stat.status === 'banned' ? '冷宫' : (stat.source === 'user' ? '投稿' : '正常');
+        const source = stat.source === 'user' ? '用户投稿' : (stat.source === 'promoted' ? '已转正' : '管理员');
+        const draws = stat.draws || 0;
+        const likes = stat.likes || 0;
+        const dislikes = stat.dislikes || 0;
+        const checkins = stat.checkins || 0;
+        // 转义引号
+        const text = q.replace(/"/g, '""');
+        return `"${text}",${draws},${likes},${dislikes},${checkins},${status},${source}`;
+    }).join('\n');
+    const csv = BOM + header + '\n' + rows;
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `能量咒语库_${new Date().toISOString().slice(0,10)}.txt`;
+    a.download = `能量咒语库_${new Date().toISOString().slice(0,10)}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
