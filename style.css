@@ -1040,6 +1040,19 @@ html, body {
     margin-bottom: 4px;
 }
 
+.my-type-badge {
+    display: inline-block;
+    font-size: 0.6rem;
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.my-type-badge.voice { background: #e8f5e9; color: #2e7d32; }
+.my-type-badge.text { background: #e3f2fd; color: #1565c0; }
+.my-type-badge.image { background: #fff3e0; color: #e65100; }
+.my-type-badge.custom { background: #f3e5f5; color: #7b1fa2; }
+
 .btn-delete {
     background: none;
     border: none;
@@ -1083,6 +1096,17 @@ html, body {
     font-size: 0.85rem;
     color: #777;
     line-height: 1.5;
+}
+
+.my-history-image {
+    margin-top: 6px;
+}
+
+.my-history-img {
+    max-width: 100%;
+    max-height: 150px;
+    border-radius: 8px;
+    object-fit: cover;
 }
 
 .history-audio {

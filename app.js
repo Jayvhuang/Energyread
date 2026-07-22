@@ -218,7 +218,7 @@ async function loadQuotes() {
 
 // ===== IndexedDB 初始化 =====
 const DB_NAME = 'LoveMyselfDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 let db = null;
 
 function initDB() {
@@ -234,6 +234,10 @@ function initDB() {
             // 存储录音
             if (!database.objectStoreNames.contains('recordings')) {
                 database.createObjectStore('recordings', { keyPath: 'id' });
+            }
+            // 存储图片
+            if (!database.objectStoreNames.contains('images')) {
+                database.createObjectStore('images', { keyPath: 'id' });
             }
         };
     });
@@ -273,6 +277,46 @@ function getAllRecordings() {
     return new Promise((resolve, reject) => {
         const tx = db.transaction('recordings', 'readonly');
         const store = tx.objectStore('recordings');
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+function saveImage(id, blob, date) {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction('images', 'readwrite');
+        const store = tx.objectStore('images');
+        store.put({ id, blob, date });
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+    });
+}
+
+function getImage(id) {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction('images', 'readonly');
+        const store = tx.objectStore('images');
+        const request = store.get(id);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+function deleteImage(id) {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction('images', 'readwrite');
+        const store = tx.objectStore('images');
+        store.delete(id);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+    });
+}
+
+function getAllImages() {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction('images', 'readonly');
+        const store = tx.objectStore('images');
         const request = store.getAll();
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
@@ -488,6 +532,7 @@ const els = {
     nextMonth: document.getElementById('nextMonth'),
     voiceHistory: document.getElementById('voiceHistory'),
     thoughtHistory: document.getElementById('thoughtHistory'),
+    myHistoryList: document.getElementById('myHistoryList'),
     clearDataBtn: document.getElementById('clearDataBtn'),
     shareModal: document.getElementById('shareModal'),
     shareCard: document.getElementById('shareCard'),
@@ -1013,11 +1058,17 @@ async function finishCheckin(type) {
         hasVoice: type === 'voice' || type === 'both',
         hasText: type === 'text' || type === 'both',
         hasImage: currentImageBlob !== null,
+        imageId: currentImageBlob ? `img_${Date.now()}` : null,
         isCustom: isCustomMode
     };
 
     checkins.push(checkinData);
     setData(STORAGE_KEYS.CHECKINS, checkins);
+
+    // 保存图片到本地
+    if (currentImageBlob && checkinData.imageId) {
+        await saveImage(checkinData.imageId, currentImageBlob, dateStr);
+    }
 
     // 更新云端打卡计数
     if (lastQuoteId != null) {
@@ -1499,11 +1550,8 @@ function renderRecordPage() {
     // 日历
     renderCalendar();
 
-    // 声音历史
-    renderVoiceHistory(checkins);
-
-    // 感想历史
-    renderThoughtHistory(thoughts);
+    // 打卡记录
+    renderMyHistory(checkins, thoughts);
 }
 
 function calculateStreak(checkins) {
@@ -1584,119 +1632,122 @@ els.nextMonth.addEventListener('click', () => {
     renderCalendar();
 });
 
-async function renderVoiceHistory(checkins) {
-    els.voiceHistory.innerHTML = '';
-    const cutoff = Date.now() - 72 * 60 * 60 * 1000; // 72小时前
+async function renderMyHistory(checkins, thoughts) {
+    els.myHistoryList.innerHTML = '';
+    const cutoff = Date.now() - 72 * 60 * 60 * 1000;
 
-    const voiceCheckins = checkins
-        .filter(c => {
-            if (!c.recordingId) return false;
-            const itemTime = new Date(c.date + 'T' + c.time).getTime();
-            return itemTime >= cutoff;
-        })
-        .reverse();
+    // 按时间倒序排列
+    const sorted = [...checkins].sort((a, b) => {
+        const ta = new Date(a.date + 'T' + a.time).getTime();
+        const tb = new Date(b.date + 'T' + b.time).getTime();
+        return tb - ta;
+    }).filter(c => {
+        const itemTime = new Date(c.date + 'T' + c.time).getTime();
+        return itemTime >= cutoff;
+    });
 
-    if (voiceCheckins.length === 0) {
-        els.voiceHistory.innerHTML = '<div class="history-item"><div class="history-quote" style="color:#999;">72小时内的录音会在这里显示</div></div>';
+    if (sorted.length === 0) {
+        els.myHistoryList.innerHTML = '<div class="history-item"><div class="history-quote" style="color:#999;">72小时内的打卡记录会在这里显示</div></div>';
         return;
     }
 
-    for (const c of voiceCheckins) {
+    for (const c of sorted) {
         const div = document.createElement('div');
         div.className = 'history-item';
-        div.dataset.recordingId = c.recordingId;
-        div.dataset.date = c.date;
-        div.innerHTML = `
+
+        // 找到匹配的感想
+        const thought = thoughts.find(t =>
+            t.date === c.date && t.time === c.time && t.quote === c.quote
+        );
+
+        // 类型标签
+        let typeLabels = '';
+        if (c.isCustom) typeLabels += '<span class="my-type-badge custom">自定义</span> ';
+        if (c.hasVoice) typeLabels += '<span class="my-type-badge voice">朗读</span> ';
+        if (c.hasText) typeLabels += '<span class="my-type-badge text">文字</span> ';
+        if (c.hasImage) typeLabels += '<span class="my-type-badge image">图片</span> ';
+
+        let html = `
             <div class="history-header">
                 <div class="history-date">${c.date} ${c.time}</div>
-                <button class="btn-delete" data-type="voice" data-id="${c.recordingId}" data-date="${c.date}">删除</button>
+                <div>${typeLabels}</div>
             </div>
             <div class="history-quote">${escapeHtml(c.quote)}</div>
-            <audio class="history-audio" controls preload="none"></audio>
         `;
-        els.voiceHistory.appendChild(div);
 
-        const rec = await getRecording(c.recordingId).catch(() => null);
-        if (rec && rec.blob) {
-            div.querySelector('audio').src = URL.createObjectURL(rec.blob);
+        // 音频
+        if (c.recordingId) {
+            html += `<audio class="history-audio" id="myAudio_${c.recordingId}" controls preload="none"></audio>`;
+        }
+
+        // 感想文字
+        if (thought) {
+            html += `<div class="history-thought">${escapeHtml(thought.text)}</div>`;
+        }
+
+        // 图片
+        if (c.imageId) {
+            html += `<div class="my-history-image" id="myImage_${c.imageId}"></div>`;
+        }
+
+        // 删除按钮
+        html += `<div style="text-align:right;margin-top:4px;"><button class="btn-delete" data-id="${c.recordingId || ''}" data-date="${c.date}" data-time="${c.time}" data-quote="${escapeHtml(c.quote)}" data-imageid="${c.imageId || ''}">删除</button></div>`;
+
+        div.innerHTML = html;
+        els.myHistoryList.appendChild(div);
+
+        // 加载音频
+        if (c.recordingId) {
+            const rec = await getRecording(c.recordingId).catch(() => null);
+            if (rec && rec.blob) {
+                document.getElementById(`myAudio_${c.recordingId}`).src = URL.createObjectURL(rec.blob);
+            }
+        }
+
+        // 加载图片
+        if (c.imageId) {
+            const imgRec = await getImage(c.imageId).catch(() => null);
+            if (imgRec && imgRec.blob) {
+                const img = document.createElement('img');
+                img.className = 'my-history-img';
+                img.src = URL.createObjectURL(imgRec.blob);
+                document.getElementById(`myImage_${c.imageId}`).appendChild(img);
+            }
         }
     }
 
-    // 绑定删除按钮
-    els.voiceHistory.querySelectorAll('.btn-delete').forEach(btn => {
+    // 删除按钮事件
+    els.myHistoryList.querySelectorAll('.btn-delete').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const recordingId = e.target.dataset.id;
             const date = e.target.dataset.date;
-            if (!confirm('确定删除这条录音记录吗？')) return;
+            const time = e.target.dataset.time;
+            const quote = e.target.dataset.quote;
+            if (!confirm('确定删除这条记录吗？')) return;
 
             // 从 checkins 中移除
             let allCheckins = getData(STORAGE_KEYS.CHECKINS, []);
             allCheckins = allCheckins.filter(c => !(c.recordingId === recordingId && c.date === date));
             setData(STORAGE_KEYS.CHECKINS, allCheckins);
 
-            // 从 IndexedDB 中删除录音
-            await deleteRecording(recordingId).catch(() => {});
-
-            // 重新渲染
-            renderRecordPage();
-        });
-    });
-}
-
-function renderThoughtHistory(thoughts) {
-    els.thoughtHistory.innerHTML = '';
-    const cutoff = Date.now() - 72 * 60 * 60 * 1000; // 72小时前
-
-    const reversed = thoughts
-        .filter(t => {
-            const itemTime = new Date(t.date + 'T' + t.time).getTime();
-            return itemTime >= cutoff;
-        })
-        .reverse();
-
-    if (reversed.length === 0) {
-        els.thoughtHistory.innerHTML = '<div class="history-item"><div class="history-quote" style="color:#999;">72小时内的感想会在这里显示</div></div>';
-        return;
-    }
-
-    reversed.forEach((t, index) => {
-        const div = document.createElement('div');
-        div.className = 'history-item';
-        div.dataset.index = index;
-        div.innerHTML = `
-            <div class="history-header">
-                <div class="history-date">${t.date} ${t.time}</div>
-                <button class="btn-delete" data-type="thought" data-index="${index}">删除</button>
-            </div>
-            <div class="history-quote">${escapeHtml(t.quote)}</div>
-            <div class="history-thought">${escapeHtml(t.text)}</div>
-        `;
-        els.thoughtHistory.appendChild(div);
-    });
-
-    // 绑定删除按钮
-    els.thoughtHistory.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const index = parseInt(e.target.dataset.index);
-            if (!confirm('确定删除这条感想记录吗？')) return;
-
-            // 从 thoughts 中移除（注意：这里用的是过滤后的 reversed 的 index，需要从原始数据中定位）
-            let allThoughts = getData(STORAGE_KEYS.THOUGHTS, []);
-            const cutoff = Date.now() - 72 * 60 * 60 * 1000;
-            const validThoughts = allThoughts.filter(t => {
-                const itemTime = new Date(t.date + 'T' + t.time).getTime();
-                return itemTime >= cutoff;
-            });
-            const targetThought = validThoughts[validThoughts.length - 1 - index];
-
-            if (targetThought) {
-                allThoughts = allThoughts.filter(t =>
-                    !(t.date === targetThought.date && t.time === targetThought.time && t.text === targetThought.text)
-                );
+            // 移除对应的感想
+            if (quote) {
+                let allThoughts = getData(STORAGE_KEYS.THOUGHTS, []);
+                allThoughts = allThoughts.filter(t => !(t.date === date && t.time === time && t.quote === quote));
                 setData(STORAGE_KEYS.THOUGHTS, allThoughts);
             }
 
-            // 重新渲染
+            // 从 IndexedDB 中删除录音
+            if (recordingId) {
+                await deleteRecording(recordingId).catch(() => {});
+            }
+
+            // 从 IndexedDB 中删除图片
+            const imageId = e.target.dataset.imageid;
+            if (imageId) {
+                await deleteImage(imageId).catch(() => {});
+            }
+
             renderRecordPage();
         });
     });
@@ -2171,6 +2222,10 @@ els.clearDataBtn.addEventListener('click', async () => {
     for (const rec of allRecs) {
         await deleteRecording(rec.id).catch(() => {});
     }
+    const allImgs = await getAllImages().catch(() => []);
+    for (const img of allImgs) {
+        await deleteImage(img.id).catch(() => {});
+    }
 
     alert('数据已清除');
     location.reload();
@@ -2225,6 +2280,9 @@ async function cleanupOldData() {
         for (const c of oldCheckins) {
             if (c.recordingId) {
                 await deleteRecording(c.recordingId).catch(() => {});
+            }
+            if (c.imageId) {
+                await deleteImage(c.imageId).catch(() => {});
             }
         }
         checkins = checkins.filter(c => {
