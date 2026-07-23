@@ -1716,11 +1716,12 @@ async function renderMyHistory(checkins, thoughts) {
         }
     }
 
-    // 删除按钮事件
-    els.myHistoryList.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            const recordingId = e.target.dataset.id;
-            const date = e.target.dataset.date;
+    // 删除按钮事件（事件代理）
+    els.myHistoryList.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.btn-delete');
+        if (!btn) return;
+        const recordingId = btn.dataset.id;
+        const date = btn.dataset.date;
             const time = e.target.dataset.time;
             const quote = e.target.dataset.quote;
             if (!confirm('确定删除这条记录吗？')) return;
@@ -1750,8 +1751,7 @@ async function renderMyHistory(checkins, thoughts) {
 
             renderRecordPage();
         });
-    });
-}
+    }
 
 
 // ===== 后台管理 =====
