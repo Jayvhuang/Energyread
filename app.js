@@ -1972,6 +1972,20 @@ document.getElementById('exportQuotesBtn').addEventListener('click', () => {
     URL.revokeObjectURL(url);
 });
 
+// 导出纯文本（仅语句内容）
+document.getElementById('exportTextBtn').addEventListener('click', () => {
+    const text = quotes.join('\n');
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `能量咒语_文本_${new Date().toISOString().slice(0,10)}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
+
 // 表头列排序
 els.adminColSorts.forEach(col => {
     col.addEventListener('click', () => {

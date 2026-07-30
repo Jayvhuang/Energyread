@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>能量咒语 · 每日朗读</title>
-    <link rel="stylesheet" href="style.css?v=14">
+    <link rel="stylesheet" href="style.css?v=15">
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
@@ -93,7 +93,7 @@
             <label class="checkbox-label garden-opt" id="gardenOptWrap" style="display:none;">
                 <input type="checkbox" id="gardenCheck" checked>
                 <span class="checkmark"></span>
-                <span class="label-text">传递你的能量到能量花园（匿名方式）</span>
+                <span class="label-text">传递到能量花园（匿名）</span>
             </label>
 
             <!-- 完成按钮 -->
@@ -114,12 +114,12 @@
 
         <!-- 投稿入口 -->
         <div class="submit-entry" id="submitEntry">
-            <span class="submit-entry-text">📝 想分享你的能量咒语？</span>
+            <span class="submit-entry-text">📝 想分享你看到高能一句话？</span>
             <button class="btn-submit" id="submitEntryBtn">投稿</button>
         </div>
 
         <div class="today-count" id="todayCount" style="display:none;">
-            今天有 <span id="countNum">0</span> 人也在念诵能量咒语
+            今天有 <span id="countNum">0</span> 人也在朗读能量咒语
         </div>
     </div>
 
@@ -224,7 +224,8 @@
                 <h3>批量导入</h3>
                 <textarea class="admin-input" id="batchImportInput" placeholder="每行一条语句，粘贴后点击批量导入..." style="min-height:120px;"></textarea>
                 <button class="btn-primary admin-add-btn" id="batchImportBtn" style="margin-top:8px;">批量导入</button>
-                <button class="btn-secondary" id="exportQuotesBtn" style="margin-top:8px;width:100%;">📥 导出所有语句</button>
+                <button class="btn-secondary" id="exportQuotesBtn" style="margin-top:8px;width:100%;">📥 导出 Excel（含统计数据）</button>
+                <button class="btn-secondary" id="exportTextBtn" style="margin-top:8px;width:100%;">📄 导出文本（仅语句内容）</button>
             </div>
 
             <div class="admin-panel">
@@ -334,6 +335,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=29"></script>
+    <script src="app.js?v=30"></script>
 </body>
 </html>

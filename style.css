@@ -1729,6 +1729,13 @@ html, body {
     margin-top: 20px;
 }
 
+.modal-actions .btn-primary,
+.modal-actions .btn-secondary {
+    padding: 12px 32px;
+    font-size: 1rem;
+    flex: 0 0 auto;
+}
+
 /* ===== 分享卡片预览 ===== */
 .share-card {
     background: linear-gradient(135deg, #ff9a9e 0%, #ff69b4 50%, #667eea 100%);
