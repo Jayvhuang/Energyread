@@ -1168,6 +1168,7 @@ async function finishCheckin(type) {
     // 显示完成状态
     els.checkinSection.querySelector('.checkin-options').style.display = 'none';
     els.recordArea.style.display = 'none';
+    els.recordHintText.style.display = 'none';
     els.textArea.style.display = 'none';
     els.imageArea.style.display = 'none';
     els.imageUploadBtn.style.display = 'none';
