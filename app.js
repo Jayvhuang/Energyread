@@ -502,6 +502,7 @@ const els = {
     imageRemoveBtn: document.getElementById('imageRemoveBtn'),
     imageArea: document.getElementById('imageArea'),
     gardenOptWrap: document.getElementById('gardenOptWrap'),
+    gardenGuideLink: document.getElementById('gardenGuideLink'),
     recordArea: document.getElementById('recordArea'),
     textArea: document.getElementById('textArea'),
     recordBtn: document.getElementById('recordBtn'),
@@ -594,6 +595,17 @@ document.querySelectorAll('.nav-item').forEach(btn => {
         if (pageId === 'page-garden') renderGarden();
     });
 });
+
+// 花园引导链接
+els.gardenGuideLink.addEventListener('click', () => {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-garden').classList.add('active');
+    document.querySelector('[data-page="page-garden"]').classList.add('active');
+    renderGarden();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
 // ===== 抽一句话 =====
 els.drawBtn.addEventListener('click', async () => {
     try {
@@ -823,6 +835,7 @@ function resetCheckinState() {
     els.completeBtn.style.display = 'none';
     els.submitCheckinBtn.style.display = 'none';
     els.checkinDone.style.display = 'none';
+    els.gardenGuideLink.style.display = 'none';
     els.recordResult.style.display = 'none';
     els.thoughtInput.value = '';
     els.charCount.textContent = '0';
@@ -1160,6 +1173,7 @@ async function finishCheckin(type) {
     els.imageUploadBtn.style.display = 'none';
     els.imagePreview.style.display = 'none';
     els.gardenOptWrap.style.display = 'none';
+    els.gardenGuideLink.style.display = els.gardenCheck.checked ? 'inline-block' : 'none';
     els.completeBtn.style.display = 'none';
     els.submitCheckinBtn.style.display = 'none';
     els.checkinDone.style.display = 'block';
@@ -1647,7 +1661,7 @@ async function renderMyHistory(checkins, thoughts) {
     });
 
     if (sorted.length === 0) {
-        els.myHistoryList.innerHTML = '<div class="history-item"><div class="history-quote" style="color:#999;">72小时内的打卡记录会在这里显示</div></div>';
+        els.myHistoryList.innerHTML = '<div class="history-item"><div class="history-quote" style="color:#999;">7天内的打卡记录会在这里显示</div></div>';
         return;
     }
 
@@ -2264,9 +2278,9 @@ if (els.themeOptions) {
 }
 
 // ===== 初始化 =====
-// ===== 清理过期数据（72小时）=====
+// ===== 清理过期数据（7天）=====
 async function cleanupOldData() {
-    const cutoff = Date.now() - 72 * 60 * 60 * 1000;
+    const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
 
     // 清理打卡记录
     let checkins = getData(STORAGE_KEYS.CHECKINS, []);

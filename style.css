@@ -534,6 +534,22 @@ html, body {
     gap: 8px;
 }
 
+.garden-link {
+    display: inline-block;
+    margin-top: 16px;
+    color: #667eea;
+    font-size: 0.95rem;
+    text-decoration: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    background: rgba(102, 126, 234, 0.1);
+    transition: background 0.2s;
+}
+
+.garden-link:hover {
+    background: rgba(102, 126, 234, 0.2);
+}
+
 /* ===== 今日人数 ===== */
 .today-count {
     text-align: center;
