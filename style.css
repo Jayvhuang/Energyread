@@ -1956,15 +1956,15 @@ html, body {
 .weekly-theme-card {
     background: #f8f8ff;
     border-radius: 16px;
-    padding: 24px 20px;
+    padding: 32px 28px;
     margin-bottom: 16px;
     border-left: 4px solid #667eea;
 }
 
 .weekly-theme-desc {
-    font-size: 0.9rem;
-    color: #555;
-    line-height: 1.7;
+    font-size: 1.15rem;
+    color: #444;
+    line-height: 1.8;
     white-space: pre-wrap;
 }
 
