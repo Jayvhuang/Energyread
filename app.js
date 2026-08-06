@@ -592,7 +592,6 @@ const els = {
     adminGardenList: document.getElementById('adminGardenList'),
     adminGardenCount: document.getElementById('adminGardenCount'),
     // 周主题
-    weeklySubtitle: document.getElementById('weeklySubtitle'),
     weeklyThemeTitle: document.getElementById('weeklyThemeTitle'),
     weeklyThemeDesc: document.getElementById('weeklyThemeDesc'),
     weeklyNameInput: document.getElementById('weeklyNameInput'),
@@ -2499,7 +2498,6 @@ async function initWeeklyPage() {
     els.weeklyThemeTitle.textContent = theme.title;
     els.weeklyThemeDesc.textContent = theme.description;
     els.weeklyTextInput.placeholder = theme.placeholder || '';
-    els.weeklySubtitle.textContent = theme.title;
 
     // 恢复匿名名称
     let savedName = getData(STORAGE_KEYS.WEEKLY_NAME, '');
@@ -2556,10 +2554,9 @@ async function renderWeeklyList() {
         const timeStr = `${dt.getMonth()+1}月${dt.getDate()}日 ${dt.toTimeString().slice(0, 5)}`;
         const likeInfo = likesMap[item.id] || { count: 0, liked: false };
         div.innerHTML = `
-            <div class="weekly-item-name">${escapeHtml(item.author_name)}</div>
-            <div class="weekly-item-content">${escapeHtml(item.content)}</div>
+            <div class="weekly-item-content"><span class="weekly-item-name">${escapeHtml(item.author_name)}:</span> ${escapeHtml(item.content)}</div>
             <div class="weekly-item-footer">
-                <span class="weekly-item-time" style="font-size:0.8rem;color:rgba(255,255,255,0.5);margin-right:auto;">${timeStr}</span>
+                <span class="weekly-item-time">${timeStr}</span>
                 <button class="weekly-like-btn" data-id="${item.id}">${likeInfo.liked ? '💗' : '🤍'}${likeInfo.count > 0 ? ' ' + likeInfo.count : ''}</button>
             </div>
         `;

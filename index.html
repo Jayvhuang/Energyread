@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>能量咒语 · 每日朗读</title>
-    <link rel="stylesheet" href="style.css?v=17">
+    <link rel="stylesheet" href="style.css?v=18">
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
@@ -139,7 +139,7 @@
     <div class="page" id="page-weekly">
         <div class="page-header">
             <h2>周主题</h2>
-            <p class="page-subtitle" id="weeklySubtitle">本周主题</p>
+            <p class="page-subtitle">本周的主题是</p>
         </div>
         <div class="weekly-theme-card" id="weeklyThemeCard">
             <h3 class="weekly-theme-title" id="weeklyThemeTitle"></h3>
@@ -149,8 +149,8 @@
             <div class="weekly-name-row">
                 <input class="weekly-name-input" id="weeklyNameInput" placeholder="匿名名称" maxlength="20">
             </div>
-            <textarea class="weekly-text-input" id="weeklyTextInput" placeholder="" maxlength="200"></textarea>
-            <div class="char-count"><span id="weeklyCharCount">0</span>/200</div>
+            <textarea class="weekly-text-input" id="weeklyTextInput" placeholder="" maxlength="100"></textarea>
+            <div class="char-count"><span id="weeklyCharCount">0</span>/100</div>
             <label class="checkbox-label">
                 <input type="checkbox" id="weeklyRecordCheck" checked>
                 <span class="checkmark"></span>
@@ -178,7 +178,7 @@
             <button class="btn-primary" id="weeklySubmitBtn">提交</button>
         </div>
         <div class="weekly-public-section">
-            <h3 class="weekly-section-title">公开分享区</h3>
+            <h3 class="weekly-section-title">展示区</h3>
             <div class="weekly-list" id="weeklyList">
                 <div class="empty-garden">加载中…</div>
             </div>
@@ -437,6 +437,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=32"></script>
+    <script src="app.js?v=33"></script>
 </body>
 </html>

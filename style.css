@@ -1948,30 +1948,29 @@ html, body {
 
 /* ===== 周主题页面 ===== */
 .weekly-theme-card {
-    background: rgba(255,255,255,0.15);
-    backdrop-filter: blur(10px);
+    background: #f8f8ff;
     border-radius: 16px;
     padding: 24px 20px;
     margin-bottom: 16px;
+    border-left: 4px solid #667eea;
 }
 
 .weekly-theme-title {
-    font-size: 1.4rem;
-    color: #fff;
+    font-size: 1.5rem;
+    color: #333;
     font-weight: 700;
     margin-bottom: 12px;
 }
 
 .weekly-theme-desc {
     font-size: 0.9rem;
-    color: rgba(255,255,255,0.85);
+    color: #555;
     line-height: 1.7;
     white-space: pre-wrap;
 }
 
 .weekly-input-section {
-    background: rgba(255,255,255,0.15);
-    backdrop-filter: blur(10px);
+    background: #f8f8ff;
     border-radius: 16px;
     padding: 20px 16px;
     margin-bottom: 20px;
@@ -1984,32 +1983,32 @@ html, body {
 .weekly-name-input {
     width: 100%;
     padding: 10px 14px;
-    border: 1px solid rgba(255,255,255,0.3);
+    border: 1px solid #ddd;
     border-radius: 10px;
-    background: rgba(255,255,255,0.1);
-    color: #fff;
+    background: #fff;
+    color: #333;
     font-size: 0.95rem;
 }
 
 .weekly-name-input::placeholder {
-    color: rgba(255,255,255,0.5);
+    color: #aaa;
 }
 
 .weekly-text-input {
     width: 100%;
     min-height: 80px;
     padding: 12px 14px;
-    border: 1px solid rgba(255,255,255,0.3);
+    border: 1px solid #ddd;
     border-radius: 10px;
-    background: rgba(255,255,255,0.1);
-    color: #fff;
+    background: #fff;
+    color: #333;
     font-size: 1rem;
     resize: vertical;
     font-family: inherit;
 }
 
 .weekly-text-input::placeholder {
-    color: rgba(255,255,255,0.5);
+    color: #aaa;
 }
 
 .weekly-record-area {
@@ -2021,7 +2020,7 @@ html, body {
 }
 
 .weekly-section-title {
-    color: #fff;
+    color: rgba(255,255,255,0.9);
     font-size: 1.05rem;
     margin-bottom: 12px;
 }
@@ -2033,30 +2032,36 @@ html, body {
 }
 
 .weekly-item {
-    background: rgba(255,255,255,0.12);
-    backdrop-filter: blur(8px);
+    background: #f8f8ff;
     border-radius: 12px;
-    padding: 14px 16px;
+    padding: 12px 14px;
+    border-left: 4px solid #667eea;
+}
+
+.weekly-item-content {
+    color: #444;
+    font-size: 1rem;
+    line-height: 1.6;
 }
 
 .weekly-item-name {
     font-size: 0.85rem;
-    color: rgba(255,255,255,0.7);
-    margin-bottom: 6px;
+    color: #888;
     font-weight: 600;
-}
-
-.weekly-item-content {
-    color: #fff;
-    font-size: 1rem;
-    line-height: 1.6;
-    margin-bottom: 8px;
+    margin-right: 6px;
 }
 
 .weekly-item-footer {
     display: flex;
     justify-content: flex-end;
     align-items: center;
+    margin-top: 4px;
+}
+
+.weekly-item-time {
+    font-size: 0.75rem;
+    color: #aaa;
+    margin-right: auto;
 }
 
 .weekly-like-btn {
@@ -2064,7 +2069,7 @@ html, body {
     border: none;
     cursor: pointer;
     font-size: 0.9rem;
-    color: rgba(255,255,255,0.8);
+    color: #666;
     padding: 4px 8px;
 }
 
@@ -2141,11 +2146,11 @@ html, body {
 
 /* 我的周主题记录 */
 .weekly-history-item {
-    background: rgba(255,255,255,0.12);
-    backdrop-filter: blur(8px);
+    background: #f8f8ff;
     border-radius: 12px;
     padding: 14px 16px;
     margin-bottom: 10px;
+    border-left: 4px solid #667eea;
 }
 
 .weekly-history-header {
@@ -2157,17 +2162,17 @@ html, body {
 
 .weekly-history-theme {
     font-size: 0.85rem;
-    color: rgba(255,255,255,0.7);
+    color: #888;
     font-weight: 600;
 }
 
 .weekly-history-time {
     font-size: 0.8rem;
-    color: rgba(255,255,255,0.5);
+    color: #aaa;
 }
 
 .weekly-history-content {
-    color: #fff;
+    color: #444;
     font-size: 1rem;
     line-height: 1.6;
 }
