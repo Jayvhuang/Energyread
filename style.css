@@ -1947,19 +1947,18 @@ html, body {
 }
 
 /* ===== 周主题页面 ===== */
+#weeklyThemeTitle {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-top: 4px;
+}
+
 .weekly-theme-card {
     background: #f8f8ff;
     border-radius: 16px;
     padding: 24px 20px;
     margin-bottom: 16px;
     border-left: 4px solid #667eea;
-}
-
-.weekly-theme-title {
-    font-size: 1.5rem;
-    color: #333;
-    font-weight: 700;
-    margin-bottom: 12px;
 }
 
 .weekly-theme-desc {
@@ -2013,6 +2012,16 @@ html, body {
 
 .weekly-record-area {
     margin: 12px 0;
+    text-align: center;
+}
+
+.weekly-input-section .checkbox-label {
+    justify-content: center;
+}
+
+.weekly-input-section .btn-primary {
+    display: block;
+    margin: 16px auto 0;
 }
 
 .weekly-public-section {
@@ -2042,6 +2051,7 @@ html, body {
     color: #444;
     font-size: 1rem;
     line-height: 1.6;
+    flex: 1;
 }
 
 .weekly-item-name {
@@ -2053,15 +2063,14 @@ html, body {
 
 .weekly-item-footer {
     display: flex;
-    justify-content: flex-end;
     align-items: center;
+    gap: 8px;
     margin-top: 4px;
 }
 
 .weekly-item-time {
     font-size: 0.75rem;
     color: #aaa;
-    margin-right: auto;
 }
 
 .weekly-like-btn {
@@ -2070,7 +2079,9 @@ html, body {
     cursor: pointer;
     font-size: 0.9rem;
     color: #666;
-    padding: 4px 8px;
+    padding: 2px 6px;
+    margin-left: auto;
+    white-space: nowrap;
 }
 
 /* 周主题管理 */
