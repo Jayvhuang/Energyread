@@ -2453,14 +2453,19 @@ function getWeekStart(date = new Date()) {
     return d;
 }
 
-// 计算当前应该显示的主题
-function getCurrentThemeIndex(themes) {
+// 获取当前主题（优先 is_current，其次自动轮换）
+function getCurrentTheme(themes) {
     const activeThemes = themes.filter(t => t.status === 'active').sort((a, b) => a.sort_order - b.sort_order);
-    if (activeThemes.length === 0) return -1;
+    if (activeThemes.length === 0) return null;
+    // 优先：手动设为本周
+    const manual = activeThemes.find(t => t.is_current);
+    if (manual) return manual;
+    // 其次：按周自动轮换
     const weekStart = getWeekStart();
-    const refDate = new Date('2025-01-06T00:00:00'); // 2025年第一个周一作为基准
+    const refDate = new Date('2025-01-06T00:00:00');
     const weekDiff = Math.floor((weekStart - refDate) / (7 * 24 * 60 * 60 * 1000));
-    return weekDiff % activeThemes.length;
+    const idx = ((weekDiff % activeThemes.length) + activeThemes.length) % activeThemes.length;
+    return activeThemes[idx];
 }
 
 // 加载周主题
@@ -2489,9 +2494,7 @@ async function initWeeklyPage() {
         return;
     }
 
-    const idx = getCurrentThemeIndex(weeklyThemes);
-    const activeThemes = weeklyThemes.filter(t => t.status === 'active').sort((a, b) => a.sort_order - b.sort_order);
-    const theme = activeThemes[idx];
+    const theme = getCurrentTheme(weeklyThemes);
     if (!theme) return;
     currentThemeId = theme.id;
 
@@ -2801,14 +2804,21 @@ async function renderAdminWeekly() {
     els.adminWeeklyCount.textContent = `${weeklyThemes.length} 条`;
     els.adminWeeklyList.innerHTML = '';
 
-    const activeThemes = weeklyThemes.filter(t => t.status === 'active').sort((a, b) => a.sort_order - b.sort_order);
-    const currentIdx = getCurrentThemeIndex(weeklyThemes);
-    const currentTheme = activeThemes[currentIdx];
+    const sortedThemes = [...weeklyThemes].sort((a, b) => a.sort_order - b.sort_order);
+    const currentTheme = getCurrentTheme(weeklyThemes);
+    const total = sortedThemes.length;
 
-    weeklyThemes.sort((a, b) => a.sort_order - b.sort_order).forEach(theme => {
+    sortedThemes.forEach((theme, index) => {
         const isCurrent = currentTheme && theme.id === currentTheme.id;
         const div = document.createElement('div');
         div.className = 'admin-weekly-row' + (isCurrent ? ' current' : '');
+
+        // 生成位置下拉列表选项
+        let positionOptions = '';
+        for (let i = 1; i <= total; i++) {
+            positionOptions += `<option value="${i}" ${i === index + 1 ? 'selected' : ''}>第${i}位</option>`;
+        }
+
         div.innerHTML = `
             <div class="admin-weekly-info">
                 <div class="admin-weekly-row-title">
@@ -2817,11 +2827,12 @@ async function renderAdminWeekly() {
                 </div>
                 <div class="admin-weekly-row-desc">${escapeHtml(theme.description)}</div>
                 <div class="admin-weekly-row-meta">
-                    排序: <input class="admin-weekly-order-input" data-id="${theme.id}" value="${theme.sort_order}">
+                    位置: <select class="admin-weekly-position" data-id="${theme.id}">${positionOptions}</select>
                     | 状态: ${theme.status === 'active' ? '启用' : '停用'}
                 </div>
             </div>
             <div class="admin-weekly-actions">
+                ${isCurrent ? '' : `<button class="btn-small" data-action="current" data-id="${theme.id}">设为本周</button>`}
                 <button class="btn-small" data-action="edit" data-id="${theme.id}">编辑</button>
                 <button class="btn-small" data-action="toggle" data-id="${theme.id}">${theme.status === 'active' ? '停用' : '启用'}</button>
                 <button class="btn-small btn-delete-quote" data-action="delete" data-id="${theme.id}">删除</button>
@@ -2830,7 +2841,7 @@ async function renderAdminWeekly() {
         els.adminWeeklyList.appendChild(div);
     });
 
-    // 绑定操作
+    // 绑定按钮操作
     els.adminWeeklyList.querySelectorAll('button').forEach(btn => {
         btn.addEventListener('click', async () => {
             const id = parseInt(btn.dataset.id);
@@ -2838,27 +2849,56 @@ async function renderAdminWeekly() {
             if (action === 'edit') await editWeeklyTheme(id);
             if (action === 'toggle') await toggleWeeklyThemeStatus(id);
             if (action === 'delete') await deleteWeeklyTheme(id);
+            if (action === 'current') await setWeeklyCurrent(id);
         });
     });
 
-    // 绑定排序输入
-    els.adminWeeklyList.querySelectorAll('.admin-weekly-order-input').forEach(input => {
-        input.addEventListener('change', async () => {
-            const id = parseInt(input.dataset.id);
-            const order = parseInt(input.value) || 0;
-            await sb.from('weekly_themes').update({ sort_order: order }).eq('id', id);
-            renderAdminWeekly();
+    // 绑定位置下拉列表
+    els.adminWeeklyList.querySelectorAll('.admin-weekly-position').forEach(select => {
+        select.addEventListener('change', async () => {
+            const id = parseInt(select.dataset.id);
+            const newPos = parseInt(select.value);
+            await reorderWeeklyThemes(id, newPos);
         });
     });
 
-    // 填充主题选择下拉框
+    // 填充提交记录的主题选择下拉框
     els.adminWeeklyThemeSelect.innerHTML = '<option value="">选择主题…</option>';
-    weeklyThemes.sort((a, b) => a.sort_order - b.sort_order).forEach(theme => {
+    sortedThemes.forEach(theme => {
         const opt = document.createElement('option');
         opt.value = theme.id;
         opt.textContent = theme.title + (currentTheme && theme.id === currentTheme.id ? '（本周）' : '');
         els.adminWeeklyThemeSelect.appendChild(opt);
     });
+}
+
+// 重新排序：把指定主题移到新位置，其他主题自动调整
+async function reorderWeeklyThemes(themeId, newPos) {
+    const sorted = [...weeklyThemes].sort((a, b) => a.sort_order - b.sort_order);
+    const currentIndex = sorted.findIndex(t => t.id === themeId);
+    if (currentIndex === -1 || currentIndex === newPos - 1) return;
+
+    // 取出目标，插入新位置
+    const [moved] = sorted.splice(currentIndex, 1);
+    sorted.splice(newPos - 1, 0, moved);
+
+    // 重新编号并批量更新
+    for (let i = 0; i < sorted.length; i++) {
+        const newOrder = i + 1;
+        if (sorted[i].sort_order !== newOrder) {
+            await sb.from('weekly_themes').update({ sort_order: newOrder }).eq('id', sorted[i].id);
+        }
+    }
+    renderAdminWeekly();
+}
+
+// 设为本周
+async function setWeeklyCurrent(id) {
+    // 先清除所有 is_current
+    await sb.from('weekly_themes').update({ is_current: false }).neq('id', 0);
+    // 再设置目标
+    await sb.from('weekly_themes').update({ is_current: true }).eq('id', id);
+    renderAdminWeekly();
 }
 
 // 加载某个主题的提交记录

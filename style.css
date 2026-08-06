@@ -2146,12 +2146,10 @@ html, body {
     gap: 4px;
 }
 
-.admin-weekly-order-input {
-    width: 50px;
-    padding: 4px;
+.admin-weekly-position {
+    padding: 4px 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    text-align: center;
     font-size: 0.85rem;
 }
 
