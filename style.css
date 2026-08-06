@@ -1663,7 +1663,7 @@ html, body {
     flex-direction: column;
     align-items: center;
     gap: 2px;
-    padding: 4px 16px;
+    padding: 4px 12px;
     cursor: pointer;
     color: #999;
     transition: color 0.2s;
@@ -1944,4 +1944,230 @@ html, body {
     #page-admin.page {
         max-width: 900px;
     }
+}
+
+/* ===== 周主题页面 ===== */
+.weekly-theme-card {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 24px 20px;
+    margin-bottom: 16px;
+}
+
+.weekly-theme-title {
+    font-size: 1.4rem;
+    color: #fff;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.weekly-theme-desc {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.85);
+    line-height: 1.7;
+    white-space: pre-wrap;
+}
+
+.weekly-input-section {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 20px 16px;
+    margin-bottom: 20px;
+}
+
+.weekly-name-row {
+    margin-bottom: 10px;
+}
+
+.weekly-name-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    font-size: 0.95rem;
+}
+
+.weekly-name-input::placeholder {
+    color: rgba(255,255,255,0.5);
+}
+
+.weekly-text-input {
+    width: 100%;
+    min-height: 80px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    font-size: 1rem;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.weekly-text-input::placeholder {
+    color: rgba(255,255,255,0.5);
+}
+
+.weekly-record-area {
+    margin: 12px 0;
+}
+
+.weekly-public-section {
+    margin-bottom: 20px;
+}
+
+.weekly-section-title {
+    color: #fff;
+    font-size: 1.05rem;
+    margin-bottom: 12px;
+}
+
+.weekly-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.weekly-item {
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+    padding: 14px 16px;
+}
+
+.weekly-item-name {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.weekly-item-content {
+    color: #fff;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 8px;
+}
+
+.weekly-item-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.weekly-like-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.8);
+    padding: 4px 8px;
+}
+
+/* 周主题管理 */
+.admin-weekly-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.admin-weekly-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+
+.admin-weekly-row.current {
+    border-color: #ff69b4;
+    background: #fff5fa;
+}
+
+.admin-weekly-info {
+    flex: 1;
+}
+
+.admin-weekly-row-title {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.admin-weekly-row-desc {
+    font-size: 0.85rem;
+    color: #666;
+    white-space: pre-wrap;
+    max-height: 60px;
+    overflow: hidden;
+}
+
+.admin-weekly-row-meta {
+    font-size: 0.8rem;
+    color: #999;
+    margin-top: 4px;
+}
+
+.admin-weekly-badge {
+    display: inline-block;
+    background: #ff69b4;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 6px;
+}
+
+.admin-weekly-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.admin-weekly-order-input {
+    width: 50px;
+    padding: 4px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 0.85rem;
+}
+
+/* 我的周主题记录 */
+.weekly-history-item {
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+}
+
+.weekly-history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.weekly-history-theme {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.7);
+    font-weight: 600;
+}
+
+.weekly-history-time {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.5);
+}
+
+.weekly-history-content {
+    color: #fff;
+    font-size: 1rem;
+    line-height: 1.6;
 }

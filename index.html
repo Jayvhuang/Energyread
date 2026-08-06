@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>能量咒语 · 每日朗读</title>
-    <link rel="stylesheet" href="style.css?v=15">
+    <link rel="stylesheet" href="style.css?v=16">
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
@@ -135,6 +135,56 @@
         <div class="garden-note">💡 能量花园只保留 72 小时记录，之后自动清除</div>
     </div>
 
+    <!-- 周主题 -->
+    <div class="page" id="page-weekly">
+        <div class="page-header">
+            <h2>周主题</h2>
+            <p class="page-subtitle" id="weeklySubtitle">本周主题</p>
+        </div>
+        <div class="weekly-theme-card" id="weeklyThemeCard">
+            <h3 class="weekly-theme-title" id="weeklyThemeTitle"></h3>
+            <p class="weekly-theme-desc" id="weeklyThemeDesc"></p>
+        </div>
+        <div class="weekly-input-section">
+            <div class="weekly-name-row">
+                <input class="weekly-name-input" id="weeklyNameInput" placeholder="匿名名称" maxlength="20">
+            </div>
+            <textarea class="weekly-text-input" id="weeklyTextInput" placeholder="" maxlength="200"></textarea>
+            <div class="char-count"><span id="weeklyCharCount">0</span>/200</div>
+            <label class="checkbox-label">
+                <input type="checkbox" id="weeklyRecordCheck">
+                <span class="checkmark"></span>
+                <span class="label-text">朗读</span>
+            </label>
+            <div class="weekly-record-area" id="weeklyRecordArea" style="display:none;">
+                <div class="record-timer" id="weeklyRecordTimer">00:00 / 00:30</div>
+                <button class="record-btn" id="weeklyRecordBtn">
+                    <span class="record-icon">🎤</span>
+                    <span class="record-label">点击朗读</span>
+                </button>
+                <p class="record-hint">点击朗读，再点停止</p>
+                <div class="record-result" id="weeklyRecordResult" style="display:none;">
+                    <audio class="record-player" id="weeklyRecordPlayer" controls></audio>
+                    <div class="record-actions">
+                        <button class="btn-small" id="weeklyReRecordBtn">重新录</button>
+                    </div>
+                </div>
+            </div>
+            <label class="checkbox-label">
+                <input type="checkbox" id="weeklyPublicCheck" checked>
+                <span class="checkmark"></span>
+                <span class="label-text">公开展示</span>
+            </label>
+            <button class="btn-primary" id="weeklySubmitBtn">提交</button>
+        </div>
+        <div class="weekly-public-section">
+            <h3 class="weekly-section-title">公开分享区</h3>
+            <div class="weekly-list" id="weeklyList">
+                <div class="empty-garden">加载中…</div>
+            </div>
+        </div>
+    </div>
+
     <!-- 我的记录 -->
     <div class="page" id="page-record">
         <div class="page-header">
@@ -174,6 +224,11 @@
             <div class="history-list" id="myHistoryList"></div>
         </div>
 
+        <div class="history-section">
+            <h3>我的周主题记录 <span style="font-size:0.75rem;color:#999;font-weight:normal;">· 最多15条</span></h3>
+            <div class="history-list" id="myWeeklyList"></div>
+        </div>
+
         <div class="me-section" style="margin-top: 16px;">
             <div class="me-item me-item-column">
                 <div class="me-item-row">
@@ -210,6 +265,7 @@
         <div class="admin-tabs">
             <button class="admin-tab active" data-tab="quotes">语句管理</button>
             <button class="admin-tab" data-tab="garden">能量花园管理</button>
+            <button class="admin-tab" data-tab="weekly">周主题管理</button>
         </div>
 
         <!-- 语句管理 -->
@@ -260,6 +316,24 @@
                 </div>
             </div>
         </div>
+
+        <!-- 周主题管理 -->
+        <div class="admin-tab-content" id="adminTabWeekly">
+            <div class="admin-panel">
+                <h3>新增周主题</h3>
+                <input class="admin-input" id="weeklyThemeTitleInput" placeholder="主题标题（如：我是……）" maxlength="50" style="margin-bottom:8px;">
+                <textarea class="admin-input" id="weeklyThemeDescInput" placeholder="描述文案、规则要求、示例……" style="min-height:100px;"></textarea>
+                <input class="admin-input" id="weeklyThemePlaceholderInput" placeholder="输入框占位符（如：我是……）" maxlength="50" style="margin-top:8px;">
+                <button class="btn-primary admin-add-btn" id="addWeeklyThemeBtn" style="margin-top:8px;">新增主题</button>
+            </div>
+            <div class="admin-panel">
+                <div class="admin-toolbar">
+                    <h3>主题列表</h3>
+                    <span id="adminWeeklyCount">0 条</span>
+                </div>
+                <div class="admin-weekly-list" id="adminWeeklyList"></div>
+            </div>
+        </div>
     </div>
 
     <!-- 底部导航 -->
@@ -267,6 +341,10 @@
         <button class="nav-item active" data-page="page-home">
             <span class="nav-icon">🏠</span>
             <span class="nav-label">首页</span>
+        </button>
+        <button class="nav-item" data-page="page-weekly">
+            <span class="nav-icon">🎯</span>
+            <span class="nav-label">周主题</span>
         </button>
         <button class="nav-item" data-page="page-garden">
             <span class="nav-icon">🌸</span>
@@ -335,6 +413,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=30"></script>
+    <script src="app.js?v=31"></script>
 </body>
 </html>

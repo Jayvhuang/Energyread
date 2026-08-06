@@ -335,7 +335,9 @@ const STORAGE_KEYS = {
     QUOTE_STATS_VERSION: 'lm_quote_stats_version',
     USER_PREFS: 'lm_user_prefs',
     SUBMISSIONS: 'lm_submissions',
-    SETTINGS: 'lm_settings'
+    SETTINGS: 'lm_settings',
+    WEEKLY_RECORDS: 'lm_weekly_records',
+    WEEKLY_NAME: 'lm_weekly_name'
 };
 
 function getData(key, defaultVal) {
@@ -488,6 +490,15 @@ const ADMIN_PASSWORD = 'energy2026';
 let adminLoggedIn = false;
 let isCustomMode = false;
 
+// ===== 周主题状态 =====
+let weeklyThemes = [];
+let currentThemeId = null;
+let weeklyMediaRecorder = null;
+let weeklyRecordedChunks = [];
+let weeklyRecordingBlob = null;
+let weeklyRecordingStartTime = 0;
+let weeklyRecordingTimer = null;
+
 // ===== DOM 元素 =====
 const els = {
     quoteText: document.getElementById('quoteText'),
@@ -579,7 +590,33 @@ const els = {
     adminTabQuotes: document.getElementById('adminTabQuotes'),
     adminTabGarden: document.getElementById('adminTabGarden'),
     adminGardenList: document.getElementById('adminGardenList'),
-    adminGardenCount: document.getElementById('adminGardenCount')
+    adminGardenCount: document.getElementById('adminGardenCount'),
+    // 周主题
+    weeklySubtitle: document.getElementById('weeklySubtitle'),
+    weeklyThemeTitle: document.getElementById('weeklyThemeTitle'),
+    weeklyThemeDesc: document.getElementById('weeklyThemeDesc'),
+    weeklyNameInput: document.getElementById('weeklyNameInput'),
+    weeklyTextInput: document.getElementById('weeklyTextInput'),
+    weeklyCharCount: document.getElementById('weeklyCharCount'),
+    weeklyRecordCheck: document.getElementById('weeklyRecordCheck'),
+    weeklyRecordArea: document.getElementById('weeklyRecordArea'),
+    weeklyRecordTimer: document.getElementById('weeklyRecordTimer'),
+    weeklyRecordBtn: document.getElementById('weeklyRecordBtn'),
+    weeklyRecordResult: document.getElementById('weeklyRecordResult'),
+    weeklyRecordPlayer: document.getElementById('weeklyRecordPlayer'),
+    weeklyReRecordBtn: document.getElementById('weeklyReRecordBtn'),
+    weeklyPublicCheck: document.getElementById('weeklyPublicCheck'),
+    weeklySubmitBtn: document.getElementById('weeklySubmitBtn'),
+    weeklyList: document.getElementById('weeklyList'),
+    myWeeklyList: document.getElementById('myWeeklyList'),
+    // 周主题管理
+    adminTabWeekly: document.getElementById('adminTabWeekly'),
+    weeklyThemeTitleInput: document.getElementById('weeklyThemeTitleInput'),
+    weeklyThemeDescInput: document.getElementById('weeklyThemeDescInput'),
+    weeklyThemePlaceholderInput: document.getElementById('weeklyThemePlaceholderInput'),
+    addWeeklyThemeBtn: document.getElementById('addWeeklyThemeBtn'),
+    adminWeeklyList: document.getElementById('adminWeeklyList'),
+    adminWeeklyCount: document.getElementById('adminWeeklyCount')
 };
 
 // ===== 页面导航 =====
@@ -593,6 +630,7 @@ document.querySelectorAll('.nav-item').forEach(btn => {
 
         if (pageId === 'page-record') renderRecordPage();
         if (pageId === 'page-garden') renderGarden();
+        if (pageId === 'page-weekly') initWeeklyPage();
     });
 });
 
@@ -1567,6 +1605,9 @@ function renderRecordPage() {
 
     // 打卡记录
     renderMyHistory(checkins, thoughts);
+
+    // 周主题记录
+    renderMyWeeklyHistory();
 }
 
 function calculateStreak(checkins) {
@@ -1830,7 +1871,9 @@ els.adminTabs.forEach(tab => {
         const target = tab.dataset.tab;
         els.adminTabQuotes.classList.toggle('active', target === 'quotes');
         els.adminTabGarden.classList.toggle('active', target === 'garden');
+        els.adminTabWeekly.classList.toggle('active', target === 'weekly');
         if (target === 'garden') renderAdminGarden();
+        if (target === 'weekly') renderAdminWeekly();
     });
 });
 
@@ -2380,12 +2423,513 @@ async function cleanupCloudData() {
     }
 }
 
+// ===== 周主题功能 =====
+
+// 生成随机匿名名称
+function generateWeeklyName() {
+    const prefixes = ['能量', '光之', '星辰', '清风', '暖阳', '月光', '彩虹', '晨露'];
+    const suffixes = ['旅人', '使者', '精灵', '守护', '行者', '漫步', '探索'];
+    return prefixes[Math.floor(Math.random() * prefixes.length)] +
+           suffixes[Math.floor(Math.random() * suffixes.length)] +
+           '#' + Math.floor(1000 + Math.random() * 9000);
+}
+
+// 获取本周一日期
+function getWeekStart(date = new Date()) {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    d.setDate(diff);
+    return d;
+}
+
+// 计算当前应该显示的主题
+function getCurrentThemeIndex(themes) {
+    const activeThemes = themes.filter(t => t.status === 'active').sort((a, b) => a.sort_order - b.sort_order);
+    if (activeThemes.length === 0) return -1;
+    const weekStart = getWeekStart();
+    const refDate = new Date('2025-01-06T00:00:00'); // 2025年第一个周一作为基准
+    const weekDiff = Math.floor((weekStart - refDate) / (7 * 24 * 60 * 60 * 1000));
+    return weekDiff % activeThemes.length;
+}
+
+// 加载周主题
+async function loadWeeklyThemes() {
+    const { data, error } = await sb
+        .from('weekly_themes')
+        .select('*')
+        .order('sort_order', { ascending: true });
+    if (error) {
+        console.warn('加载周主题失败', error);
+        return [];
+    }
+    weeklyThemes = data || [];
+    return weeklyThemes;
+}
+
+// 初始化周主题页面
+async function initWeeklyPage() {
+    if (weeklyThemes.length === 0) {
+        await loadWeeklyThemes();
+    }
+    if (weeklyThemes.length === 0) {
+        els.weeklyThemeTitle.textContent = '暂无主题';
+        els.weeklyThemeDesc.textContent = '';
+        els.weeklyList.innerHTML = '<div class="empty-garden">还没有周主题</div>';
+        return;
+    }
+
+    const idx = getCurrentThemeIndex(weeklyThemes);
+    const activeThemes = weeklyThemes.filter(t => t.status === 'active').sort((a, b) => a.sort_order - b.sort_order);
+    const theme = activeThemes[idx];
+    if (!theme) return;
+    currentThemeId = theme.id;
+
+    els.weeklyThemeTitle.textContent = theme.title;
+    els.weeklyThemeDesc.textContent = theme.description;
+    els.weeklyTextInput.placeholder = theme.placeholder || '';
+    els.weeklySubtitle.textContent = theme.title;
+
+    // 恢复匿名名称
+    let savedName = getData(STORAGE_KEYS.WEEKLY_NAME, '');
+    if (!savedName) {
+        savedName = generateWeeklyName();
+        setData(STORAGE_KEYS.WEEKLY_NAME, savedName);
+    }
+    els.weeklyNameInput.value = savedName;
+
+    // 重置输入
+    els.weeklyTextInput.value = '';
+    els.weeklyCharCount.textContent = '0';
+    els.weeklyRecordCheck.checked = false;
+    els.weeklyRecordArea.style.display = 'none';
+    els.weeklyRecordResult.style.display = 'none';
+    weeklyRecordingBlob = null;
+
+    // 加载公开分享区
+    await renderWeeklyList();
+}
+
+// 渲染公开分享区
+async function renderWeeklyList() {
+    els.weeklyList.innerHTML = '<div class="empty-garden">加载中…</div>';
+    if (!currentThemeId) return;
+
+    const { data, error } = await sb
+        .from('weekly_submissions')
+        .select('id, author_name, content, created_at')
+        .eq('theme_id', currentThemeId)
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+    if (error) {
+        console.warn('加载周主题分享失败', error);
+        els.weeklyList.innerHTML = '<div class="empty-garden">加载失败</div>';
+        return;
+    }
+
+    if (!data || data.length === 0) {
+        els.weeklyList.innerHTML = '<div class="empty-garden">还没有人分享，来做第一个吧！</div>';
+        return;
+    }
+
+    // 加载点赞
+    const ids = data.map(d => d.id);
+    const likesMap = await fetchWeeklyLikes(ids);
+
+    els.weeklyList.innerHTML = '';
+    data.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'weekly-item';
+        const dt = new Date(item.created_at);
+        const timeStr = `${dt.getMonth()+1}月${dt.getDate()}日 ${dt.toTimeString().slice(0, 5)}`;
+        const likeInfo = likesMap[item.id] || { count: 0, liked: false };
+        div.innerHTML = `
+            <div class="weekly-item-name">${escapeHtml(item.author_name)}</div>
+            <div class="weekly-item-content">${escapeHtml(item.content)}</div>
+            <div class="weekly-item-footer">
+                <span class="weekly-item-time" style="font-size:0.8rem;color:rgba(255,255,255,0.5);margin-right:auto;">${timeStr}</span>
+                <button class="weekly-like-btn" data-id="${item.id}">${likeInfo.liked ? '💗' : '🤍'}${likeInfo.count > 0 ? ' ' + likeInfo.count : ''}</button>
+            </div>
+        `;
+        els.weeklyList.appendChild(div);
+    });
+
+    // 绑定点赞
+    els.weeklyList.querySelectorAll('.weekly-like-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const id = parseInt(btn.dataset.id);
+            const liked = btn.textContent.includes('💗');
+            await toggleWeeklyLike(id, liked);
+            await renderWeeklyList();
+        });
+    });
+}
+
+// 周主题点赞
+async function fetchWeeklyLikes(submissionIds) {
+    if (!submissionIds.length) return {};
+    const { data, error } = await sb
+        .from('weekly_likes')
+        .select('submission_id, device_id')
+        .in('submission_id', submissionIds);
+    if (error) return {};
+    const deviceId = getDeviceId();
+    const result = {};
+    (data || []).forEach(l => {
+        if (!result[l.submission_id]) result[l.submission_id] = { count: 0, liked: false };
+        result[l.submission_id].count++;
+        if (l.device_id === deviceId) result[l.submission_id].liked = true;
+    });
+    submissionIds.forEach(id => { if (!result[id]) result[id] = { count: 0, liked: false }; });
+    return result;
+}
+
+async function toggleWeeklyLike(submissionId, currentlyLiked) {
+    const deviceId = getDeviceId();
+    if (currentlyLiked) {
+        await sb.from('weekly_likes').delete().eq('submission_id', submissionId).eq('device_id', deviceId);
+    } else {
+        await sb.from('weekly_likes').insert({ submission_id: submissionId, device_id: deviceId });
+    }
+}
+
+// 周主题录音
+els.weeklyRecordCheck.addEventListener('change', () => {
+    els.weeklyRecordArea.style.display = els.weeklyRecordCheck.checked ? 'block' : 'none';
+    if (!els.weeklyRecordCheck.checked) {
+        weeklyRecordingBlob = null;
+        els.weeklyRecordResult.style.display = 'none';
+    }
+});
+
+els.weeklyRecordBtn.addEventListener('click', async () => {
+    if (weeklyMediaRecorder && weeklyMediaRecorder.state === 'recording') {
+        weeklyMediaRecorder.stop();
+        return;
+    }
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        weeklyRecordedChunks = [];
+        weeklyMediaRecorder = new MediaRecorder(stream);
+        weeklyMediaRecorder.ondataavailable = e => {
+            if (e.data.size > 0) weeklyRecordedChunks.push(e.data);
+        };
+        weeklyMediaRecorder.onstop = () => {
+            stream.getTracks().forEach(t => t.stop());
+            weeklyRecordingBlob = new Blob(weeklyRecordedChunks, { type: 'audio/webm' });
+            els.weeklyRecordPlayer.src = URL.createObjectURL(weeklyRecordingBlob);
+            els.weeklyRecordResult.style.display = 'block';
+            els.weeklyRecordBtn.querySelector('.record-label').textContent = '重新朗读';
+            clearInterval(weeklyRecordingTimer);
+        };
+        weeklyMediaRecorder.start();
+        els.weeklyRecordBtn.querySelector('.record-label').textContent = '停止';
+        els.weeklyRecordResult.style.display = 'none';
+
+        weeklyRecordingStartTime = Date.now();
+        const maxSec = 30;
+        weeklyRecordingTimer = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - weeklyRecordingStartTime) / 1000);
+            if (elapsed >= maxSec) {
+                if (weeklyMediaRecorder.state === 'recording') weeklyMediaRecorder.stop();
+                return;
+            }
+            const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
+            const ss = String(elapsed % 60).padStart(2, '0');
+            els.weeklyRecordTimer.textContent = `${mm}:${ss} / 00:30`;
+        }, 200);
+    } catch (err) {
+        alert('无法访问麦克风：' + err.message);
+    }
+});
+
+els.weeklyReRecordBtn.addEventListener('click', () => {
+    weeklyRecordingBlob = null;
+    els.weeklyRecordResult.style.display = 'none';
+    els.weeklyRecordBtn.querySelector('.record-label').textContent = '点击朗读';
+});
+
+// 文字计数
+els.weeklyTextInput.addEventListener('input', () => {
+    els.weeklyCharCount.textContent = els.weeklyTextInput.value.length;
+});
+
+// 匿名名称保存
+els.weeklyNameInput.addEventListener('blur', () => {
+    setData(STORAGE_KEYS.WEEKLY_NAME, els.weeklyNameInput.value.trim() || generateWeeklyName());
+});
+
+// 提交周主题
+els.weeklySubmitBtn.addEventListener('click', async () => {
+    const content = els.weeklyTextInput.value.trim();
+    if (!content) {
+        alert('请写下你想说的话');
+        return;
+    }
+    if (!currentThemeId) {
+        alert('当前没有主题');
+        return;
+    }
+
+    let authorName = els.weeklyNameInput.value.trim();
+    if (!authorName) {
+        authorName = generateWeeklyName();
+        els.weeklyNameInput.value = authorName;
+    }
+    setData(STORAGE_KEYS.WEEKLY_NAME, authorName);
+
+    const isPublic = els.weeklyPublicCheck.checked;
+
+    els.weeklySubmitBtn.disabled = true;
+    els.weeklySubmitBtn.textContent = '提交中…';
+
+    try {
+        let audioUrl = null;
+        let audioId = null;
+
+        // 如果有录音，上传
+        if (els.weeklyRecordCheck.checked && weeklyRecordingBlob) {
+            audioId = 'weekly_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+            audioUrl = await uploadAudioToCloud(weeklyRecordingBlob, audioId);
+            // 保存到 IndexedDB
+            await saveRecording(audioId, weeklyRecordingBlob, new Date().toISOString());
+        }
+
+        // 如果公开，提交到云端
+        if (isPublic) {
+            const { error } = await sb.from('weekly_submissions').insert({
+                theme_id: currentThemeId,
+                device_id: getDeviceId(),
+                author_name: authorName,
+                content: content,
+                audio_url: null  // 公开区不保存语音
+            });
+            if (error) console.warn('提交周主题到公开区失败', error);
+        }
+
+        // 保存到本地"我的"
+        const records = getData(STORAGE_KEYS.WEEKLY_RECORDS, []);
+        const theme = weeklyThemes.find(t => t.id === currentThemeId);
+        records.unshift({
+            themeTitle: theme ? theme.title : '',
+            content: content,
+            audioId: audioId,
+            date: new Date().toISOString().slice(0, 10),
+            time: new Date().toTimeString().slice(0, 8)
+        });
+        // 最多保留15条
+        if (records.length > 15) {
+            // 删除被移除记录的录音
+            const removed = records.slice(15);
+            for (const r of removed) {
+                if (r.audioId) await deleteRecording(r.audioId).catch(() => {});
+            }
+            records.splice(15);
+        }
+        setData(STORAGE_KEYS.WEEKLY_RECORDS, records);
+
+        // 重置输入
+        els.weeklyTextInput.value = '';
+        els.weeklyCharCount.textContent = '0';
+        els.weeklyRecordCheck.checked = false;
+        els.weeklyRecordArea.style.display = 'none';
+        els.weeklyRecordResult.style.display = 'none';
+        weeklyRecordingBlob = null;
+
+        // 刷新公开区
+        if (isPublic) await renderWeeklyList();
+
+        alert('提交成功！');
+    } catch (err) {
+        console.error('提交周主题失败', err);
+        alert('提交失败，请重试');
+    } finally {
+        els.weeklySubmitBtn.disabled = false;
+        els.weeklySubmitBtn.textContent = '提交';
+    }
+});
+
+// 渲染"我的"周主题记录
+async function renderMyWeeklyHistory() {
+    const records = getData(STORAGE_KEYS.WEEKLY_RECORDS, []);
+    els.myWeeklyList.innerHTML = '';
+
+    if (records.length === 0) {
+        els.myWeeklyList.innerHTML = '<div class="history-item"><div class="history-quote" style="color:#999;">周主题记录会在这里显示</div></div>';
+        return;
+    }
+
+    for (const r of records) {
+        const div = document.createElement('div');
+        div.className = 'weekly-history-item';
+
+        let audioHtml = '';
+        if (r.audioId) {
+            const rec = await getRecording(r.audioId).catch(() => null);
+            if (rec) {
+                const url = URL.createObjectURL(rec.blob);
+                audioHtml = `<audio class="record-player" controls preload="none" src="${url}" style="margin-top:8px;width:100%;"></audio>`;
+            }
+        }
+
+        div.innerHTML = `
+            <div class="weekly-history-header">
+                <span class="weekly-history-theme">${escapeHtml(r.themeTitle)}</span>
+                <span class="weekly-history-time">${r.date} ${r.time.slice(0, 5)}</span>
+            </div>
+            <div class="weekly-history-content">${escapeHtml(r.content)}</div>
+            ${audioHtml}
+        `;
+        els.myWeeklyList.appendChild(div);
+    }
+}
+
+// ===== 周主题管理 =====
+
+// 渲染周主题管理
+async function renderAdminWeekly() {
+    await loadWeeklyThemes();
+    els.adminWeeklyCount.textContent = `${weeklyThemes.length} 条`;
+    els.adminWeeklyList.innerHTML = '';
+
+    const activeThemes = weeklyThemes.filter(t => t.status === 'active').sort((a, b) => a.sort_order - b.sort_order);
+    const currentIdx = getCurrentThemeIndex(weeklyThemes);
+    const currentTheme = activeThemes[currentIdx];
+
+    weeklyThemes.sort((a, b) => a.sort_order - b.sort_order).forEach(theme => {
+        const isCurrent = currentTheme && theme.id === currentTheme.id;
+        const div = document.createElement('div');
+        div.className = 'admin-weekly-row' + (isCurrent ? ' current' : '');
+        div.innerHTML = `
+            <div class="admin-weekly-info">
+                <div class="admin-weekly-row-title">
+                    ${escapeHtml(theme.title)}
+                    ${isCurrent ? '<span class="admin-weekly-badge">本周</span>' : ''}
+                </div>
+                <div class="admin-weekly-row-desc">${escapeHtml(theme.description)}</div>
+                <div class="admin-weekly-row-meta">
+                    排序: <input class="admin-weekly-order-input" data-id="${theme.id}" value="${theme.sort_order}">
+                    | 状态: ${theme.status === 'active' ? '启用' : '停用'}
+                </div>
+            </div>
+            <div class="admin-weekly-actions">
+                <button class="btn-small" data-action="edit" data-id="${theme.id}">编辑</button>
+                <button class="btn-small" data-action="toggle" data-id="${theme.id}">${theme.status === 'active' ? '停用' : '启用'}</button>
+                <button class="btn-small btn-delete-quote" data-action="delete" data-id="${theme.id}">删除</button>
+            </div>
+        `;
+        els.adminWeeklyList.appendChild(div);
+    });
+
+    // 绑定操作
+    els.adminWeeklyList.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const id = parseInt(btn.dataset.id);
+            const action = btn.dataset.action;
+            if (action === 'edit') await editWeeklyTheme(id);
+            if (action === 'toggle') await toggleWeeklyThemeStatus(id);
+            if (action === 'delete') await deleteWeeklyTheme(id);
+        });
+    });
+
+    // 绑定排序输入
+    els.adminWeeklyList.querySelectorAll('.admin-weekly-order-input').forEach(input => {
+        input.addEventListener('change', async () => {
+            const id = parseInt(input.dataset.id);
+            const order = parseInt(input.value) || 0;
+            await sb.from('weekly_themes').update({ sort_order: order }).eq('id', id);
+            renderAdminWeekly();
+        });
+    });
+}
+
+// 新增主题
+els.addWeeklyThemeBtn.addEventListener('click', async () => {
+    const title = els.weeklyThemeTitleInput.value.trim();
+    const description = els.weeklyThemeDescInput.value.trim();
+    const placeholder = els.weeklyThemePlaceholderInput.value.trim();
+    if (!title) {
+        alert('请输入主题标题');
+        return;
+    }
+    const maxOrder = weeklyThemes.reduce((max, t) => Math.max(max, t.sort_order), 0);
+    const { error } = await sb.from('weekly_themes').insert({
+        title, description, placeholder,
+        sort_order: maxOrder + 1
+    });
+    if (error) {
+        alert('新增失败：' + error.message);
+        return;
+    }
+    els.weeklyThemeTitleInput.value = '';
+    els.weeklyThemeDescInput.value = '';
+    els.weeklyThemePlaceholderInput.value = '';
+    renderAdminWeekly();
+});
+
+async function editWeeklyTheme(id) {
+    const theme = weeklyThemes.find(t => t.id === id);
+    if (!theme) return;
+    const title = prompt('主题标题：', theme.title);
+    if (title === null) return;
+    const description = prompt('描述文案：', theme.description);
+    if (description === null) return;
+    const placeholder = prompt('输入框占位符：', theme.placeholder);
+    if (placeholder === null) return;
+    const { error } = await sb.from('weekly_themes').update({
+        title: title.trim(),
+        description: description.trim(),
+        placeholder: placeholder.trim()
+    }).eq('id', id);
+    if (error) {
+        alert('修改失败：' + error.message);
+        return;
+    }
+    renderAdminWeekly();
+}
+
+async function toggleWeeklyThemeStatus(id) {
+    const theme = weeklyThemes.find(t => t.id === id);
+    if (!theme) return;
+    const newStatus = theme.status === 'active' ? 'inactive' : 'active';
+    await sb.from('weekly_themes').update({ status: newStatus }).eq('id', id);
+    renderAdminWeekly();
+}
+
+async function deleteWeeklyTheme(id) {
+    if (!confirm('确定删除这个主题吗？')) return;
+    await sb.from('weekly_themes').delete().eq('id', id);
+    renderAdminWeekly();
+}
+
+// 清理过期公开区数据（主题切换时清除上周提交）
+async function cleanupWeeklySubmissions() {
+    try {
+        const weekStart = getWeekStart();
+        const { error } = await sb.from('weekly_submissions')
+            .delete()
+            .lt('created_at', weekStart.toISOString());
+        if (error) console.warn('清理周主题公开区失败', error);
+
+        // 同时清理孤儿点赞
+        await sb.from('weekly_likes')
+            .delete()
+            .lt('created_at', weekStart.toISOString());
+    } catch (err) {
+        console.warn('清理周主题数据失败', err);
+    }
+}
+
 async function init() {
     await initSupabase();
     await initDB();
     await loadQuotes(); // 从云端拉语句库
+    await loadWeeklyThemes(); // 加载周主题
     await cleanupOldData(); // 启动时清理过期本地数据
     await cleanupCloudData(); // 清理云端过期花园记录
+    await cleanupWeeklySubmissions(); // 清理过期周主题公开区
 
     // 恢复主题
     const savedTheme = getData('lm_theme', 'warm');
