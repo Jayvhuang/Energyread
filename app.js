@@ -616,7 +616,17 @@ const els = {
     weeklyThemePlaceholderInput: document.getElementById('weeklyThemePlaceholderInput'),
     addWeeklyThemeBtn: document.getElementById('addWeeklyThemeBtn'),
     adminWeeklyList: document.getElementById('adminWeeklyList'),
-    adminWeeklyCount: document.getElementById('adminWeeklyCount')
+    adminWeeklyCount: document.getElementById('adminWeeklyCount'),
+    // 周主题编辑模态框
+    weeklyEditModal: document.getElementById('weeklyEditModal'),
+    weeklyEditOverlay: document.getElementById('weeklyEditOverlay'),
+    editWeeklyTitle: document.getElementById('editWeeklyTitle'),
+    editWeeklyDesc: document.getElementById('editWeeklyDesc'),
+    editWeeklyPlaceholder: document.getElementById('editWeeklyPlaceholder'),
+    saveWeeklyEditBtn: document.getElementById('saveWeeklyEditBtn'),
+    cancelWeeklyEditBtn: document.getElementById('cancelWeeklyEditBtn'),
+    adminWeeklyThemeSelect: document.getElementById('adminWeeklyThemeSelect'),
+    adminWeeklySubmissions: document.getElementById('adminWeeklySubmissions')
 };
 
 // ===== 页面导航 =====
@@ -2502,8 +2512,8 @@ async function initWeeklyPage() {
     // 重置输入
     els.weeklyTextInput.value = '';
     els.weeklyCharCount.textContent = '0';
-    els.weeklyRecordCheck.checked = false;
-    els.weeklyRecordArea.style.display = 'none';
+    els.weeklyRecordCheck.checked = true;
+    els.weeklyRecordArea.style.display = 'block';
     els.weeklyRecordResult.style.display = 'none';
     weeklyRecordingBlob = null;
 
@@ -2733,8 +2743,8 @@ els.weeklySubmitBtn.addEventListener('click', async () => {
         // 重置输入
         els.weeklyTextInput.value = '';
         els.weeklyCharCount.textContent = '0';
-        els.weeklyRecordCheck.checked = false;
-        els.weeklyRecordArea.style.display = 'none';
+        els.weeklyRecordCheck.checked = true;
+        els.weeklyRecordArea.style.display = 'block';
         els.weeklyRecordResult.style.display = 'none';
         weeklyRecordingBlob = null;
 
@@ -2843,7 +2853,56 @@ async function renderAdminWeekly() {
             renderAdminWeekly();
         });
     });
+
+    // 填充主题选择下拉框
+    els.adminWeeklyThemeSelect.innerHTML = '<option value="">选择主题…</option>';
+    weeklyThemes.sort((a, b) => a.sort_order - b.sort_order).forEach(theme => {
+        const opt = document.createElement('option');
+        opt.value = theme.id;
+        opt.textContent = theme.title + (currentTheme && theme.id === currentTheme.id ? '（本周）' : '');
+        els.adminWeeklyThemeSelect.appendChild(opt);
+    });
 }
+
+// 加载某个主题的提交记录
+els.adminWeeklyThemeSelect.addEventListener('change', async () => {
+    const themeId = parseInt(els.adminWeeklyThemeSelect.value);
+    if (!themeId) {
+        els.adminWeeklySubmissions.innerHTML = '<div style="padding:20px;text-align:center;color:#999;">选择主题查看提交</div>';
+        return;
+    }
+    els.adminWeeklySubmissions.innerHTML = '<div style="padding:20px;text-align:center;color:#999;">加载中…</div>';
+
+    const { data, error } = await sb
+        .from('weekly_submissions')
+        .select('id, author_name, content, created_at')
+        .eq('theme_id', themeId)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        els.adminWeeklySubmissions.innerHTML = '<div style="padding:20px;text-align:center;color:#999;">加载失败</div>';
+        return;
+    }
+
+    if (!data || data.length === 0) {
+        els.adminWeeklySubmissions.innerHTML = '<div style="padding:20px;text-align:center;color:#999;">暂无提交记录</div>';
+        return;
+    }
+
+    els.adminWeeklySubmissions.innerHTML = '';
+    data.forEach(item => {
+        const dt = new Date(item.created_at);
+        const timeStr = `${dt.getMonth()+1}月${dt.getDate()}日 ${dt.toTimeString().slice(0, 5)}`;
+        const div = document.createElement('div');
+        div.className = 'admin-garden-item';
+        div.innerHTML = `
+            <div style="font-weight:600;color:#333;margin-bottom:4px;">${escapeHtml(item.author_name)}</div>
+            <div style="color:#555;line-height:1.6;margin-bottom:4px;">${escapeHtml(item.content)}</div>
+            <div style="font-size:0.8rem;color:#999;">${timeStr}</div>
+        `;
+        els.adminWeeklySubmissions.appendChild(div);
+    });
+});
 
 // 新增主题
 els.addWeeklyThemeBtn.addEventListener('click', async () => {
@@ -2869,26 +2928,48 @@ els.addWeeklyThemeBtn.addEventListener('click', async () => {
     renderAdminWeekly();
 });
 
+let editingThemeId = null;
+
 async function editWeeklyTheme(id) {
     const theme = weeklyThemes.find(t => t.id === id);
     if (!theme) return;
-    const title = prompt('主题标题：', theme.title);
-    if (title === null) return;
-    const description = prompt('描述文案：', theme.description);
-    if (description === null) return;
-    const placeholder = prompt('输入框占位符：', theme.placeholder);
-    if (placeholder === null) return;
+    editingThemeId = id;
+    els.editWeeklyTitle.value = theme.title;
+    els.editWeeklyDesc.value = theme.description;
+    els.editWeeklyPlaceholder.value = theme.placeholder;
+    els.weeklyEditModal.style.display = 'flex';
+}
+
+els.saveWeeklyEditBtn.addEventListener('click', async () => {
+    if (!editingThemeId) return;
+    const title = els.editWeeklyTitle.value.trim();
+    if (!title) {
+        alert('请输入主题标题');
+        return;
+    }
     const { error } = await sb.from('weekly_themes').update({
-        title: title.trim(),
-        description: description.trim(),
-        placeholder: placeholder.trim()
-    }).eq('id', id);
+        title: title,
+        description: els.editWeeklyDesc.value.trim(),
+        placeholder: els.editWeeklyPlaceholder.value.trim()
+    }).eq('id', editingThemeId);
     if (error) {
         alert('修改失败：' + error.message);
         return;
     }
+    els.weeklyEditModal.style.display = 'none';
+    editingThemeId = null;
     renderAdminWeekly();
-}
+});
+
+els.cancelWeeklyEditBtn.addEventListener('click', () => {
+    els.weeklyEditModal.style.display = 'none';
+    editingThemeId = null;
+});
+
+els.weeklyEditOverlay.addEventListener('click', () => {
+    els.weeklyEditModal.style.display = 'none';
+    editingThemeId = null;
+});
 
 async function toggleWeeklyThemeStatus(id) {
     const theme = weeklyThemes.find(t => t.id === id);

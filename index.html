@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>能量咒语 · 每日朗读</title>
-    <link rel="stylesheet" href="style.css?v=16">
+    <link rel="stylesheet" href="style.css?v=17">
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
@@ -152,11 +152,11 @@
             <textarea class="weekly-text-input" id="weeklyTextInput" placeholder="" maxlength="200"></textarea>
             <div class="char-count"><span id="weeklyCharCount">0</span>/200</div>
             <label class="checkbox-label">
-                <input type="checkbox" id="weeklyRecordCheck">
+                <input type="checkbox" id="weeklyRecordCheck" checked>
                 <span class="checkmark"></span>
                 <span class="label-text">朗读</span>
             </label>
-            <div class="weekly-record-area" id="weeklyRecordArea" style="display:none;">
+            <div class="weekly-record-area" id="weeklyRecordArea">
                 <div class="record-timer" id="weeklyRecordTimer">00:00 / 00:30</div>
                 <button class="record-btn" id="weeklyRecordBtn">
                     <span class="record-icon">🎤</span>
@@ -333,6 +333,15 @@
                 </div>
                 <div class="admin-weekly-list" id="adminWeeklyList"></div>
             </div>
+            <div class="admin-panel">
+                <div class="admin-toolbar">
+                    <h3>用户提交记录</h3>
+                    <select id="adminWeeklyThemeSelect" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem;"></select>
+                </div>
+                <div class="admin-weekly-submissions" id="adminWeeklySubmissions">
+                    <div style="padding:20px;text-align:center;color:#999;">选择主题查看提交</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -413,6 +422,21 @@
         </div>
     </div>
 
-    <script src="app.js?v=31"></script>
+    <!-- 周主题编辑模态框 -->
+    <div class="modal" id="weeklyEditModal" style="display:none;">
+        <div class="modal-overlay" id="weeklyEditOverlay"></div>
+        <div class="modal-content" style="max-width:400px;">
+            <h3 class="modal-title">编辑周主题</h3>
+            <input class="admin-input" id="editWeeklyTitle" placeholder="主题标题" maxlength="50" style="margin-bottom:8px;">
+            <textarea class="admin-input" id="editWeeklyDesc" placeholder="描述文案、规则要求、示例……" style="min-height:120px;"></textarea>
+            <input class="admin-input" id="editWeeklyPlaceholder" placeholder="输入框占位符" maxlength="50" style="margin-top:8px;">
+            <div class="modal-actions">
+                <button class="btn-primary" id="saveWeeklyEditBtn">保存</button>
+                <button class="btn-secondary" id="cancelWeeklyEditBtn">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js?v=32"></script>
 </body>
 </html>
