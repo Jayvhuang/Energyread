@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>能量咒语 · 每日朗读</title>
-    <link rel="stylesheet" href="style.css?v=22">
+    <link rel="stylesheet" href="style.css?v=23">
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
@@ -150,24 +150,14 @@
             </div>
             <textarea class="weekly-text-input" id="weeklyTextInput" placeholder="" maxlength="100"></textarea>
             <div class="char-count"><span id="weeklyCharCount">0</span>/100</div>
-            <label class="checkbox-label">
-                <input type="checkbox" id="weeklyRecordCheck" checked>
-                <span class="checkmark"></span>
-                <span class="label-text">朗读</span>
-            </label>
-            <div class="weekly-record-area" id="weeklyRecordArea">
-                <div class="record-timer" id="weeklyRecordTimer">00:00 / 00:30</div>
-                <button class="record-btn" id="weeklyRecordBtn">
-                    <span class="record-icon">🎤</span>
-                    <span class="record-label">点击朗读</span>
-                </button>
-                <p class="record-hint">点击朗读，再点停止</p>
-                <div class="record-result" id="weeklyRecordResult" style="display:none;">
-                    <audio class="record-player" id="weeklyRecordPlayer" controls></audio>
-                    <div class="record-actions">
-                        <button class="btn-small" id="weeklyReRecordBtn">重新录</button>
-                    </div>
-                </div>
+            <div class="weekly-record-row">
+                <span class="weekly-record-label">点击朗读</span>
+                <button class="weekly-record-btn" id="weeklyRecordBtn">🎤 录音</button>
+                <span class="weekly-record-timer" id="weeklyRecordTimer">00:00/00:30</span>
+            </div>
+            <div class="weekly-playback-row" id="weeklyRecordResult" style="display:none;">
+                <audio class="weekly-record-player" id="weeklyRecordPlayer" controls></audio>
+                <button class="btn-small" id="weeklyReRecordBtn">重录</button>
             </div>
             <label class="checkbox-label">
                 <input type="checkbox" id="weeklyPublicCheck" checked>
@@ -436,6 +426,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=35"></script>
+    <script src="app.js?v=36"></script>
 </body>
 </html>

@@ -2010,9 +2010,54 @@ html, body {
     color: #aaa;
 }
 
-.weekly-record-area {
+.weekly-record-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     margin: 12px 0;
-    text-align: center;
+}
+
+.weekly-record-label {
+    font-size: 0.9rem;
+    color: #555;
+    white-space: nowrap;
+}
+
+.weekly-record-btn {
+    padding: 8px 20px;
+    border: 2px solid #ff69b4;
+    border-radius: 8px;
+    background: #fff;
+    color: #ff69b4;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+}
+
+.weekly-record-btn:active {
+    transform: scale(0.96);
+}
+
+.weekly-record-timer {
+    font-size: 0.9rem;
+    color: #667eea;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.weekly-playback-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.weekly-record-player {
+    flex: 1;
+    height: 36px;
+    border-radius: 18px;
 }
 
 .weekly-input-section .checkbox-label {

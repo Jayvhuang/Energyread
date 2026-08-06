@@ -597,10 +597,8 @@ const els = {
     weeklyNameInput: document.getElementById('weeklyNameInput'),
     weeklyTextInput: document.getElementById('weeklyTextInput'),
     weeklyCharCount: document.getElementById('weeklyCharCount'),
-    weeklyRecordCheck: document.getElementById('weeklyRecordCheck'),
-    weeklyRecordArea: document.getElementById('weeklyRecordArea'),
-    weeklyRecordTimer: document.getElementById('weeklyRecordTimer'),
     weeklyRecordBtn: document.getElementById('weeklyRecordBtn'),
+    weeklyRecordTimer: document.getElementById('weeklyRecordTimer'),
     weeklyRecordResult: document.getElementById('weeklyRecordResult'),
     weeklyRecordPlayer: document.getElementById('weeklyRecordPlayer'),
     weeklyReRecordBtn: document.getElementById('weeklyReRecordBtn'),
@@ -2513,9 +2511,8 @@ async function initWeeklyPage() {
     // 重置输入
     els.weeklyTextInput.value = '';
     els.weeklyCharCount.textContent = '0';
-    els.weeklyRecordCheck.checked = true;
-    els.weeklyRecordArea.style.display = 'block';
     els.weeklyRecordResult.style.display = 'none';
+    els.weeklyRecordBtn.textContent = '🎤 录音';
     weeklyRecordingBlob = null;
 
     // 加载公开分享区
@@ -2606,14 +2603,6 @@ async function toggleWeeklyLike(submissionId, currentlyLiked) {
 }
 
 // 周主题录音
-els.weeklyRecordCheck.addEventListener('change', () => {
-    els.weeklyRecordArea.style.display = els.weeklyRecordCheck.checked ? 'block' : 'none';
-    if (!els.weeklyRecordCheck.checked) {
-        weeklyRecordingBlob = null;
-        els.weeklyRecordResult.style.display = 'none';
-    }
-});
-
 els.weeklyRecordBtn.addEventListener('click', async () => {
     if (weeklyMediaRecorder && weeklyMediaRecorder.state === 'recording') {
         weeklyMediaRecorder.stop();
@@ -2630,12 +2619,12 @@ els.weeklyRecordBtn.addEventListener('click', async () => {
             stream.getTracks().forEach(t => t.stop());
             weeklyRecordingBlob = new Blob(weeklyRecordedChunks, { type: 'audio/webm' });
             els.weeklyRecordPlayer.src = URL.createObjectURL(weeklyRecordingBlob);
-            els.weeklyRecordResult.style.display = 'block';
-            els.weeklyRecordBtn.querySelector('.record-label').textContent = '重新朗读';
+            els.weeklyRecordResult.style.display = 'flex';
+            els.weeklyRecordBtn.textContent = '🎤 录音';
             clearInterval(weeklyRecordingTimer);
         };
         weeklyMediaRecorder.start();
-        els.weeklyRecordBtn.querySelector('.record-label').textContent = '停止';
+        els.weeklyRecordBtn.textContent = '⏹ 停止';
         els.weeklyRecordResult.style.display = 'none';
 
         weeklyRecordingStartTime = Date.now();
@@ -2648,7 +2637,7 @@ els.weeklyRecordBtn.addEventListener('click', async () => {
             }
             const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
             const ss = String(elapsed % 60).padStart(2, '0');
-            els.weeklyRecordTimer.textContent = `${mm}:${ss} / 00:30`;
+            els.weeklyRecordTimer.textContent = `${mm}:${ss}/00:30`;
         }, 200);
     } catch (err) {
         alert('无法访问麦克风：' + err.message);
@@ -2658,7 +2647,7 @@ els.weeklyRecordBtn.addEventListener('click', async () => {
 els.weeklyReRecordBtn.addEventListener('click', () => {
     weeklyRecordingBlob = null;
     els.weeklyRecordResult.style.display = 'none';
-    els.weeklyRecordBtn.querySelector('.record-label').textContent = '点击朗读';
+    els.weeklyRecordBtn.textContent = '🎤 录音';
 });
 
 // 文字计数
@@ -2700,7 +2689,7 @@ els.weeklySubmitBtn.addEventListener('click', async () => {
         let audioId = null;
 
         // 如果有录音，上传
-        if (els.weeklyRecordCheck.checked && weeklyRecordingBlob) {
+        if (weeklyRecordingBlob) {
             audioId = 'weekly_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
             audioUrl = await uploadAudioToCloud(weeklyRecordingBlob, audioId);
             // 保存到 IndexedDB
@@ -2743,9 +2732,8 @@ els.weeklySubmitBtn.addEventListener('click', async () => {
         // 重置输入
         els.weeklyTextInput.value = '';
         els.weeklyCharCount.textContent = '0';
-        els.weeklyRecordCheck.checked = true;
-        els.weeklyRecordArea.style.display = 'block';
         els.weeklyRecordResult.style.display = 'none';
+        els.weeklyRecordBtn.textContent = '🎤 录音';
         weeklyRecordingBlob = null;
 
         // 刷新公开区
