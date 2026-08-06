@@ -2013,6 +2013,7 @@ html, body {
 .weekly-record-row {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
     margin: 12px 0;
 }
