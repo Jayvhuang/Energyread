@@ -1954,11 +1954,23 @@ html, body {
 }
 
 .weekly-theme-card {
-    background: #f8f8ff;
-    border-radius: 16px;
+    background: rgba(255,255,255,0.98);
+    border-radius: 24px;
     padding: 32px 28px;
     margin-bottom: 16px;
-    border-left: 4px solid #667eea;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    position: relative;
+}
+
+.weekly-theme-card::before {
+    content: '"';
+    position: absolute;
+    top: 16px;
+    left: 24px;
+    font-size: 4rem;
+    color: rgba(102,126,234,0.12);
+    font-family: Georgia, serif;
+    line-height: 1;
 }
 
 .weekly-theme-desc {
@@ -1966,6 +1978,8 @@ html, body {
     color: #444;
     line-height: 1.8;
     white-space: pre-wrap;
+    position: relative;
+    z-index: 1;
 }
 
 .weekly-input-section {
