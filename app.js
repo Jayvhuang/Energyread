@@ -943,10 +943,10 @@ async function toggleRecording() {
 
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const mimeType = MediaRecorder.isTypeSupported('audio/webm')
-            ? 'audio/webm'
-            : MediaRecorder.isTypeSupported('audio/mp4')
-                ? 'audio/mp4'
+        const mimeType = MediaRecorder.isTypeSupported('audio/mp4')
+            ? 'audio/mp4'
+            : MediaRecorder.isTypeSupported('audio/webm')
+                ? 'audio/webm'
                 : '';
 
         mediaRecorder = new MediaRecorder(stream, { mimeType });
@@ -1529,13 +1529,14 @@ async function renderGarden() {
         async function startVoiceRecording() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                recMediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+                const recMime = MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : 'audio/webm';
+                recMediaRecorder = new MediaRecorder(stream, { mimeType: recMime });
                 recChunks = [];
                 recStartTime = Date.now();
                 currentVoiceBlob = null;
                 recMediaRecorder.ondataavailable = e => { if (e.data.size > 0) recChunks.push(e.data); };
                 recMediaRecorder.onstop = async () => {
-                    currentVoiceBlob = new Blob(recChunks, { type: 'audio/webm' });
+                    currentVoiceBlob = new Blob(recChunks, { type: recMime });
                     stream.getTracks().forEach(t => t.stop());
                     voicePreview.src = URL.createObjectURL(currentVoiceBlob);
                     recordingArea.style.display = 'none';
@@ -2611,13 +2612,21 @@ els.weeklyRecordBtn.addEventListener('click', async () => {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         weeklyRecordedChunks = [];
-        weeklyMediaRecorder = new MediaRecorder(stream);
+        // 自动选择手机支持的格式
+        let recOptions = {};
+        if (MediaRecorder.isTypeSupported('audio/mp4')) {
+            recOptions = { mimeType: 'audio/mp4' };
+        } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+            recOptions = { mimeType: 'audio/webm' };
+        }
+        weeklyMediaRecorder = new MediaRecorder(stream, recOptions);
+        const recMime = weeklyMediaRecorder.mimeType || 'audio/webm';
         weeklyMediaRecorder.ondataavailable = e => {
             if (e.data.size > 0) weeklyRecordedChunks.push(e.data);
         };
         weeklyMediaRecorder.onstop = () => {
             stream.getTracks().forEach(t => t.stop());
-            weeklyRecordingBlob = new Blob(weeklyRecordedChunks, { type: 'audio/webm' });
+            weeklyRecordingBlob = new Blob(weeklyRecordedChunks, { type: recMime });
             els.weeklyRecordPlayer.src = URL.createObjectURL(weeklyRecordingBlob);
             els.weeklyRecordResult.style.display = 'flex';
             els.weeklyRecordBtn.textContent = '🎤 录音';
