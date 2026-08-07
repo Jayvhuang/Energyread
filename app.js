@@ -2482,6 +2482,29 @@ async function loadWeeklyThemes() {
 }
 
 // 初始化周主题页面
+// 解析描述区颜色标记
+// 格式: #ff69b4,b 文字内容  或  #667eea 文字内容  或  ,b 文字内容
+function parseWeeklyDesc(text) {
+    if (!text) return '';
+    return text.split('\n').map(line => {
+        // 匹配开头的标记: #颜色码 和/或 ,b(加粗)
+        const match = line.match(/^(?:(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}))?(?:,?(b))?\s(.*)/);
+        if (match) {
+            const color = match[1] || '';
+            const bold = match[2] === 'b';
+            const content = match[3];
+            let style = '';
+            if (color) style += `color:${color};`;
+            if (bold) style += 'font-weight:700;';
+            if (style) {
+                return `<span style="${style}">${escapeHtml(content)}</span>`;
+            }
+            return escapeHtml(line);
+        }
+        return escapeHtml(line);
+    }).join('<br>');
+}
+
 async function initWeeklyPage() {
     if (weeklyThemes.length === 0) {
         await loadWeeklyThemes();
@@ -2498,7 +2521,7 @@ async function initWeeklyPage() {
     currentThemeId = theme.id;
 
     els.weeklyThemeTitle.textContent = theme.title;
-    els.weeklyThemeDesc.textContent = theme.description;
+    els.weeklyThemeDesc.innerHTML = parseWeeklyDesc(theme.description);
     els.weeklyTextInput.placeholder = theme.placeholder || '';
 
     // 恢复匿名名称
