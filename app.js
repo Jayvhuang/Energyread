@@ -2738,6 +2738,18 @@ els.weeklySubmitBtn.addEventListener('click', async () => {
                 audio_url: null  // 公开区不保存语音
             });
             if (error) console.warn('提交周主题到公开区失败', error);
+
+            // 同步推送到能量花园
+            const theme = weeklyThemes.find(t => t.id === currentThemeId);
+            const gardenData = {
+                quote_text: theme ? theme.title : '周主题',
+                type: audioUrl ? 'voice' : 'text',
+                content: content
+            };
+            if (audioUrl) gardenData.audio_url = audioUrl;
+            await sb.from('garden_items').insert(gardenData).then(r => {
+                if (r.error) console.warn('同步到能量花园失败', r.error);
+            });
         }
 
         // 保存到本地"我的"
@@ -2769,9 +2781,14 @@ els.weeklySubmitBtn.addEventListener('click', async () => {
         weeklyRecordingBlob = null;
 
         // 刷新公开区
-        if (isPublic) await renderWeeklyList();
-
-        alert('提交成功！');
+        if (isPublic) {
+            await renderWeeklyList();
+            // 滚动到展示区
+            const weeklyListEl = document.getElementById('weeklyList');
+            if (weeklyListEl) {
+                weeklyListEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
     } catch (err) {
         console.error('提交周主题失败', err);
         alert('提交失败，请重试');
