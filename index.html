@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>能量咒语 · 每日朗读</title>
-    <link rel="stylesheet" href="style.css?v=26">
+    <link rel="stylesheet" href="style.css?v=27">
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
@@ -143,6 +143,7 @@
         </div>
         <div class="weekly-theme-card" id="weeklyThemeCard">
             <p class="weekly-theme-desc" id="weeklyThemeDesc"></p>
+            <button class="weekly-share-btn" id="weeklyShareBtn">📷</button>
         </div>
         <div class="weekly-input-section">
             <div class="weekly-name-row">
@@ -383,6 +384,52 @@
         </div>
     </div>
 
+    <!-- 周主题分享卡片模态框 -->
+    <div class="modal" id="weeklyShareModal" style="display:none;">
+        <div class="modal-overlay" id="weeklyShareOverlay"></div>
+        <div class="modal-content">
+            <h3 class="modal-title">分享周主题</h3>
+            <div class="share-card" id="weeklyShareCard">
+                <div class="share-card-inner">
+                    <p class="share-card-quote" id="weeklyShareCardTitle"></p>
+                    <div class="share-card-desc" id="weeklyShareCardDesc"></div>
+                    <div class="share-card-meta">
+                        <div class="share-card-info">
+                            <p class="share-card-footer">能量咒语 · 周主题</p>
+                        </div>
+                        <div class="share-card-source-wrap">
+                            <p class="share-card-source">来源</p>
+                            <p class="share-card-source-link">www.energyword.com</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-primary" id="saveWeeklyCardBtn">💾 保存图片</button>
+                <button class="btn-secondary" id="closeWeeklyShareBtn">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 周主题分享卡片模态框 -->
+    <div class="modal" id="weeklyShareModal" style="display:none;">
+        <div class="modal-overlay" id="weeklyShareOverlay"></div>
+        <div class="modal-content">
+            <h3 class="modal-title">分享周主题</h3>
+            <div class="weekly-share-card" id="weeklyShareCard">
+                <div class="weekly-share-card-inner">
+                    <p class="weekly-share-card-title" id="weeklyShareCardTitle"></p>
+                    <div class="weekly-share-card-desc" id="weeklyShareCardDesc"></div>
+                </div>
+                <p class="weekly-share-card-source">www.energyword.com</p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-primary" id="saveWeeklyCardBtn">💾 保存图片</button>
+                <button class="btn-secondary" id="closeWeeklyShareBtn">关闭</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 管理员登录模态框 -->
     <div class="modal" id="adminLoginModal" style="display:none;">
         <div class="modal-overlay" id="adminLoginOverlay"></div>
@@ -426,6 +473,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=40"></script>
+    <script src="app.js?v=41"></script>
 </body>
 </html>

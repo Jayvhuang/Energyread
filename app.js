@@ -603,6 +603,22 @@ const els = {
     weeklyRecordPlayer: document.getElementById('weeklyRecordPlayer'),
     weeklyReRecordBtn: document.getElementById('weeklyReRecordBtn'),
     weeklyPublicCheck: document.getElementById('weeklyPublicCheck'),
+    weeklyShareBtn: document.getElementById('weeklyShareBtn'),
+    weeklyShareModal: document.getElementById('weeklyShareModal'),
+    weeklyShareOverlay: document.getElementById('weeklyShareOverlay'),
+    weeklyShareCard: document.getElementById('weeklyShareCard'),
+    weeklyShareCardTitle: document.getElementById('weeklyShareCardTitle'),
+    weeklyShareCardDesc: document.getElementById('weeklyShareCardDesc'),
+    saveWeeklyCardBtn: document.getElementById('saveWeeklyCardBtn'),
+    closeWeeklyShareBtn: document.getElementById('closeWeeklyShareBtn'),
+    weeklyShareBtn: document.getElementById('weeklyShareBtn'),
+    weeklyShareModal: document.getElementById('weeklyShareModal'),
+    weeklyShareOverlay: document.getElementById('weeklyShareOverlay'),
+    weeklyShareCard: document.getElementById('weeklyShareCard'),
+    weeklyShareCardTitle: document.getElementById('weeklyShareCardTitle'),
+    weeklyShareCardDesc: document.getElementById('weeklyShareCardDesc'),
+    saveWeeklyCardBtn: document.getElementById('saveWeeklyCardBtn'),
+    closeWeeklyShareBtn: document.getElementById('closeWeeklyShareBtn'),
     weeklySubmitBtn: document.getElementById('weeklySubmitBtn'),
     weeklyList: document.getElementById('weeklyList'),
     myWeeklyList: document.getElementById('myWeeklyList'),
@@ -2811,6 +2827,48 @@ els.weeklySubmitBtn.addEventListener('click', async () => {
     } finally {
         els.weeklySubmitBtn.disabled = false;
         els.weeklySubmitBtn.textContent = '提交';
+    }
+});
+
+// 周主题分享卡片
+els.weeklyShareBtn.addEventListener('click', () => {
+    const theme = getCurrentTheme(weeklyThemes);
+    if (!theme) return;
+    els.weeklyShareCardTitle.textContent = theme.title;
+    els.weeklyShareCardDesc.innerHTML = parseWeeklyDesc(theme.description);
+    els.weeklyShareModal.style.display = 'flex';
+});
+
+els.closeWeeklyShareBtn.addEventListener('click', () => {
+    els.weeklyShareModal.style.display = 'none';
+});
+
+els.weeklyShareOverlay.addEventListener('click', () => {
+    els.weeklyShareModal.style.display = 'none';
+});
+
+els.saveWeeklyCardBtn.addEventListener('click', async () => {
+    els.saveWeeklyCardBtn.textContent = '生成中…';
+    els.saveWeeklyCardBtn.disabled = true;
+    try {
+        const canvas = await html2canvas(els.weeklyShareCard, {
+            scale: 2,
+            backgroundColor: null,
+            useCORS: true
+        });
+        const url = canvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `周主题_${new Date().toISOString().slice(0, 10)}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    } catch (err) {
+        alert('生成图片失败，请重试');
+        console.error(err);
+    } finally {
+        els.saveWeeklyCardBtn.textContent = '💾 保存图片';
+        els.saveWeeklyCardBtn.disabled = false;
     }
 });
 
