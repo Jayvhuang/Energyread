@@ -2442,26 +2442,42 @@ function generateWeeklyName() {
            '#' + Math.floor(1000 + Math.random() * 9000);
 }
 
-// 获取本周一日期
-function getWeekStart(date = new Date()) {
+// 获取本周一凌晨3点（切换时间点）
+function getWeekStartAt3AM(date = new Date()) {
     const d = new Date(date);
-    d.setHours(0, 0, 0, 0);
     const day = d.getDay();
     const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    d.setDate(diff);
-    return d;
+    const monday = new Date(d);
+    monday.setDate(diff);
+    monday.setHours(3, 0, 0, 0);
+    // 如果当前时间在周一3点之前，还属于上一周
+    if (d < monday) {
+        monday.setDate(monday.getDate() - 7);
+    }
+    return monday;
 }
 
-// 获取当前主题（优先 is_current，其次自动轮换）
+// 获取当前主题（优先手动设置，其次自动轮换）
 function getCurrentTheme(themes) {
     const activeThemes = themes.filter(t => t.status === 'active').sort((a, b) => a.sort_order - b.sort_order);
     if (activeThemes.length === 0) return null;
-    // 优先：手动设为本周
-    const manual = activeThemes.find(t => t.is_current);
-    if (manual) return manual;
-    // 其次：按周自动轮换
-    const weekStart = getWeekStart();
-    const refDate = new Date('2025-01-06T00:00:00');
+
+    // 优先：手动设为本周（current_since 有值）
+    const manualTheme = activeThemes.find(t => t.current_since);
+    if (manualTheme) {
+        const setWeekStart = getWeekStartAt3AM(new Date(manualTheme.current_since));
+        const nowWeekStart = getWeekStartAt3AM();
+        const weeksPassed = Math.floor((nowWeekStart - setWeekStart) / (7 * 24 * 60 * 60 * 1000));
+        if (weeksPassed >= 0) {
+            const manualIdx = activeThemes.indexOf(manualTheme);
+            const currentIdx = (manualIdx + weeksPassed) % activeThemes.length;
+            return activeThemes[currentIdx];
+        }
+    }
+
+    // 默认：按周自动轮换
+    const weekStart = getWeekStartAt3AM();
+    const refDate = new Date('2025-01-06T03:00:00'); // 2025年第一个周一3点作为基准
     const weekDiff = Math.floor((weekStart - refDate) / (7 * 24 * 60 * 60 * 1000));
     const idx = ((weekDiff % activeThemes.length) + activeThemes.length) % activeThemes.length;
     return activeThemes[idx];
@@ -2931,10 +2947,10 @@ async function reorderWeeklyThemes(themeId, newPos) {
 
 // 设为本周
 async function setWeeklyCurrent(id) {
-    // 先清除所有 is_current
-    await sb.from('weekly_themes').update({ is_current: false }).neq('id', 0);
+    // 先清除所有 current_since
+    await sb.from('weekly_themes').update({ current_since: null }).neq('id', 0);
     // 再设置目标
-    await sb.from('weekly_themes').update({ is_current: true }).eq('id', id);
+    await sb.from('weekly_themes').update({ current_since: new Date().toISOString() }).eq('id', id);
     renderAdminWeekly();
 }
 
@@ -3062,7 +3078,7 @@ async function deleteWeeklyTheme(id) {
 // 清理过期公开区数据（主题切换时清除上周提交）
 async function cleanupWeeklySubmissions() {
     try {
-        const weekStart = getWeekStart();
+        const weekStart = getWeekStartAt3AM();
         const { error } = await sb.from('weekly_submissions')
             .delete()
             .lt('created_at', weekStart.toISOString());
