@@ -1966,21 +1966,23 @@ html, body {
 #weeklyShareBtn,
 .weekly-share-btn {
     position: absolute !important;
-    bottom: 12px !important;
-    right: 16px !important;
-    display: inline-block !important;
-    width: auto !important;
-    height: auto !important;
+    bottom: 10px !important;
+    right: 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 52px !important;
+    height: 28px !important;
     min-width: 0 !important;
     min-height: 0 !important;
-    padding: 1px 8px !important;
-    border-radius: 10px !important;
+    padding: 0 !important;
+    border-radius: 14px !important;
     border: none !important;
     background: rgba(102,126,234,0.15) !important;
     color: #667eea !important;
-    font-size: 0.6rem !important;
+    font-size: 0.7rem !important;
     font-weight: 600 !important;
-    line-height: 1.4 !important;
+    line-height: 1 !important;
     font-family: inherit !important;
     cursor: pointer !important;
     white-space: nowrap !important;

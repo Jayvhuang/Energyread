@@ -2835,8 +2835,10 @@ els.weeklyShareBtn.addEventListener('click', () => {
     const theme = getCurrentTheme(weeklyThemes);
     if (!theme) return;
     els.weeklyShareCardTitle.textContent = theme.title;
-    // 背景渐变在 CSS 里固定设置
-    els.weeklyShareCardDesc.innerHTML = parseWeeklyDesc(theme.description);
+    // 描述区直接用白底
+    const descHtml = parseWeeklyDesc(theme.description);
+    els.weeklyShareCardDesc.style.cssText = 'background:#fff!important;background-color:#fff!important;border-radius:14px!important;padding:24px 20px!important;color:#555!important;position:relative!important;line-height:1.8!important;font-size:0.95rem!important;';
+    els.weeklyShareCardDesc.innerHTML = descHtml;
     els.weeklyShareModal.style.display = 'flex';
 });
 
