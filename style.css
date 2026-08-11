@@ -1967,12 +1967,12 @@ html, body {
     position: absolute;
     bottom: 12px;
     right: 16px;
-    padding: 3px 10px;
-    border-radius: 12px;
+    padding: 2px 8px;
+    border-radius: 10px;
     border: none;
     background: rgba(102,126,234,0.15);
     color: #667eea;
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
@@ -1992,15 +1992,17 @@ html, body {
 }
 
 .weekly-share-card-inner {
-    padding: 36px 24px 20px;
+    padding: 28px 20px 16px;
+    background: transparent;
 }
 
 .weekly-share-card-title {
-    font-size: 1.5rem;
+    font-size: 1.1rem;
     font-weight: 700;
     color: #fff;
     text-align: center;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
+    background: transparent;
 }
 
 .weekly-share-card-desc {
@@ -2028,8 +2030,9 @@ html, body {
     text-align: center;
     font-size: 0.8rem;
     color: rgba(255,255,255,0.8);
-    margin-top: 16px;
+    margin-top: 14px;
     padding-bottom: 12px;
+    background: transparent;
 }
 
 .weekly-theme-card {
