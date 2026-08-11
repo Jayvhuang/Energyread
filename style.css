@@ -1963,20 +1963,29 @@ html, body {
     margin-top: 4px;
 }
 
+#weeklyShareBtn,
 .weekly-share-btn {
-    position: absolute;
-    bottom: 12px;
-    right: 16px;
-    padding: 1px 6px;
-    border-radius: 8px;
-    border: none;
-    background: rgba(102,126,234,0.15);
-    color: #667eea;
-    font-size: 0.6rem;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background 0.2s;
+    position: absolute !important;
+    bottom: 12px !important;
+    right: 16px !important;
+    display: inline-block !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 1px 8px !important;
+    border-radius: 10px !important;
+    border: none !important;
+    background: rgba(102,126,234,0.15) !important;
+    color: #667eea !important;
+    font-size: 0.6rem !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+    font-family: inherit !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    transition: background 0.2s !important;
+    margin: 0 !important;
 }
 
 .weekly-share-btn:hover {
@@ -2012,13 +2021,14 @@ html, body {
 }
 
 .weekly-share-card-desc {
-    background: #fff;
-    border-radius: 14px;
-    padding: 24px 20px;
-    font-size: 0.95rem;
-    color: #555;
-    line-height: 1.8;
-    position: relative;
+    background: #fff !important;
+    background-color: #fff !important;
+    border-radius: 14px !important;
+    padding: 24px 20px !important;
+    font-size: 0.95rem !important;
+    color: #555 !important;
+    line-height: 1.8 !important;
+    position: relative !important;
 }
 
 .weekly-share-card-desc::before {
