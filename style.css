@@ -1967,12 +1967,12 @@ html, body {
     position: absolute;
     bottom: 12px;
     right: 16px;
-    padding: 2px 8px;
-    border-radius: 10px;
+    padding: 1px 6px;
+    border-radius: 8px;
     border: none;
     background: rgba(102,126,234,0.15);
     color: #667eea;
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
@@ -1988,6 +1988,7 @@ html, body {
     overflow: hidden;
     margin: 0 auto;
     width: 280px;
+    background: linear-gradient(135deg, #ff9a9e 0%, #ff69b4 33%, #667eea 66%, #764ba2 100%);
     box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 }
 
@@ -1996,13 +1997,18 @@ html, body {
     background: transparent;
 }
 
+#weeklyShareCardTitle,
 .weekly-share-card-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #fff;
-    text-align: center;
-    margin-bottom: 10px;
-    background: transparent;
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    color: #fff !important;
+    text-align: center !important;
+    margin: 0 0 10px 0 !important;
+    padding: 0 !important;
+    background: none !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 .weekly-share-card-desc {

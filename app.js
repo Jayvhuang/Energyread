@@ -2835,9 +2835,7 @@ els.weeklyShareBtn.addEventListener('click', () => {
     const theme = getCurrentTheme(weeklyThemes);
     if (!theme) return;
     els.weeklyShareCardTitle.textContent = theme.title;
-    // 卡片整体用页面背景渐变
-    const grad = getComputedStyle(document.documentElement).getPropertyValue('--bg-gradient').trim() || 'linear-gradient(135deg, #ff9a9e 0%, #ff69b4 33%, #667eea 66%, #764ba2 100%)';
-    els.weeklyShareCard.style.background = grad;
+    // 背景渐变在 CSS 里固定设置
     els.weeklyShareCardDesc.innerHTML = parseWeeklyDesc(theme.description);
     els.weeklyShareModal.style.display = 'flex';
 });
