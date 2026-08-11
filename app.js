@@ -2835,6 +2835,9 @@ els.weeklyShareBtn.addEventListener('click', () => {
     const theme = getCurrentTheme(weeklyThemes);
     if (!theme) return;
     els.weeklyShareCardTitle.textContent = theme.title;
+    // 主题标题区用页面背景渐变
+    const grad = getComputedStyle(document.documentElement).getPropertyValue('--bg-gradient').trim() || 'linear-gradient(135deg, #ff9a9e 0%, #ff69b4 33%, #667eea 66%, #764ba2 100%)';
+    els.weeklyShareCardTitle.style.background = grad;
     els.weeklyShareCardDesc.innerHTML = parseWeeklyDesc(theme.description);
     els.weeklyShareModal.style.display = 'flex';
 });
