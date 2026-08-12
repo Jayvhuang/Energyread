@@ -938,7 +938,6 @@ const _origResetRecBtn = els.reRecordBtn;
 els.reRecordBtn.addEventListener('click', () => {
     setTimeout(updateCheckinUI, 50);
 });
-}
 
 // ===== 录音功能 =====
 els.recordBtn.addEventListener('click', toggleRecording);
