@@ -1964,21 +1964,21 @@ html, body {
 #weeklyShareBtn,
 .weekly-share-btn {
     position: absolute !important;
-    bottom: 14px !important;
-    right: 18px !important;
+    bottom: 8px !important;
+    right: 8px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    width: 44px !important;
-    height: 28px !important;
+    width: 40px !important;
+    height: 40px !important;
     min-width: 0 !important;
     min-height: 0 !important;
     padding: 0 !important;
-    border-radius: 14px !important;
+    border-radius: 50% !important;
     border: none !important;
-    background: #e8eeff !important;
+    background: rgba(102,126,234,0.15) !important;
     color: #667eea !important;
-    font-size: 0.7rem !important;
+    font-size: 0.75rem !important;
     font-weight: 600 !important;
     line-height: 1 !important;
     font-family: inherit !important;
@@ -1986,6 +1986,7 @@ html, body {
     white-space: nowrap !important;
     transition: background 0.2s !important;
     margin: 0 !important;
+    text-align: center !important;
 }
 
 .weekly-share-btn:hover {
