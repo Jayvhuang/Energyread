@@ -1829,10 +1829,10 @@ html, body {
 .share-card-meta {
     margin-top: auto;
     text-align: center;
-    padding: 20px 0 6px;
+    padding: 16px 0 6px;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 8px;
 }
 
 .share-card-info {
@@ -1862,9 +1862,7 @@ html, body {
 }
 
 .share-card-source {
-    color: rgba(255,255,255,0.9);
-    font-size: 0.7rem;
-    font-weight: 500;
+    display: none;
 }
 
 .share-card-source-link {
@@ -1966,19 +1964,19 @@ html, body {
 #weeklyShareBtn,
 .weekly-share-btn {
     position: absolute !important;
-    bottom: 10px !important;
-    right: 14px !important;
+    bottom: 14px !important;
+    right: 18px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    width: 52px !important;
+    width: 44px !important;
     height: 28px !important;
     min-width: 0 !important;
     min-height: 0 !important;
     padding: 0 !important;
     border-radius: 14px !important;
     border: none !important;
-    background: rgba(102,126,234,0.15) !important;
+    background: #e8eeff !important;
     color: #667eea !important;
     font-size: 0.7rem !important;
     font-weight: 600 !important;
@@ -2046,10 +2044,10 @@ html, body {
 
 .weekly-share-card-source {
     text-align: center;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: rgba(255,255,255,0.8);
-    margin-top: 14px;
-    padding-bottom: 12px;
+    margin-top: 8px;
+    padding-bottom: 10px;
     background: transparent;
 }
 
