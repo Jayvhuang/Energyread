@@ -504,7 +504,6 @@ const els = {
     quoteText: document.getElementById('quoteText'),
     drawBtn: document.getElementById('drawBtn'),
     checkinSection: document.getElementById('checkinSection'),
-    recordCheck: document.getElementById('recordCheck'),
     recordHintText: document.getElementById('recordHintText'),
     imageInput: document.getElementById('imageInput'),
     imageUploadBtn: document.getElementById('imageUploadBtn'),
@@ -890,8 +889,7 @@ async function drawQuote() {
 }
 
 function resetCheckinState() {
-    els.recordCheck.checked = true;
-    els.recordArea.style.display = 'none';
+    els.recordArea.style.display = 'block';
     els.textArea.style.display = '';
     els.completeBtn.style.display = 'none';
     els.submitCheckinBtn.style.display = 'none';
@@ -910,25 +908,16 @@ function resetCheckinState() {
     els.imagePreview.style.display = 'none';
     els.imagePreviewImg.src = '';
     els.gardenOptWrap.style.display = 'none';
-    // 恢复打卡选项的显示
-    const options = els.checkinSection.querySelector('.checkin-options');
-    if (options) options.style.display = '';
-    // 恢复默认按钮状态
-    updateCheckinUI();
 }
 
-// ===== 打卡选项切换 =====
-els.recordCheck.addEventListener('change', updateCheckinUI);
-
+// ===== 打卡 UI 状态 =====
 function updateCheckinUI() {
-    const hasRecord = els.recordCheck.checked;
     const hasText = els.thoughtInput.value.trim().length > 0;
     const hasImage = currentImageBlob !== null;
+    const hasRecord = !!currentRecordingBlob;
 
-    els.recordArea.style.display = hasRecord ? 'block' : 'none';
-    els.recordHintText.style.display = hasRecord ? 'block' : 'none';
-
-    if (hasRecord) {
+    // 有录音或文字或图片，显示"完成打卡"；否则显示"默念打卡"
+    if (hasRecord || hasText || hasImage) {
         els.completeBtn.style.display = 'none';
         els.submitCheckinBtn.style.display = 'block';
         els.submitCheckinBtn.textContent = '完成打卡';
@@ -939,12 +928,16 @@ function updateCheckinUI() {
 
     // 传递到花园：有录音/文字/图片时才显示
     els.gardenOptWrap.style.display = (hasRecord || hasText || hasImage) ? 'flex' : 'none';
+}
 
-    // 重置录音状态
-    if (!hasRecord) {
-        currentRecordingBlob = null;
-        els.recordResult.style.display = 'none';
-    }
+// 文字输入变化时更新 UI
+els.thoughtInput.addEventListener('input', updateCheckinUI);
+
+// 重置录音时也要更新 UI
+const _origResetRecBtn = els.reRecordBtn;
+els.reRecordBtn.addEventListener('click', () => {
+    setTimeout(updateCheckinUI, 50);
+});
 }
 
 // ===== 录音功能 =====
@@ -1086,7 +1079,7 @@ els.completeBtn.addEventListener('click', () => {
 els.submitCheckinBtn.addEventListener('click', () => {
     if (isCheckinInProgress) return;
     isCheckinInProgress = true;
-    const hasRecord = els.recordCheck.checked;
+    const hasRecord = !!currentRecordingBlob;
     const hasText = els.thoughtInput.value.trim().length > 0;
     const hasImage = currentImageBlob !== null;
 
@@ -1226,8 +1219,7 @@ async function finishCheckin(type) {
         }
     }
 
-    // 显示完成状态
-    els.checkinSection.querySelector('.checkin-options').style.display = 'none';
+    // 打卡完成：直接显示完成状态
     els.recordArea.style.display = 'none';
     els.recordHintText.style.display = 'none';
     els.textArea.style.display = 'none';
@@ -3176,9 +3168,6 @@ async function init() {
         els.quoteText.textContent = currentQuote;
         els.checkinSection.style.display = 'block';
         resetCheckinState();
-        // 确保打卡选项可见
-        const co = els.checkinSection.querySelector('.checkin-options');
-        if (co) co.style.display = 'flex';
 
         // 显示喜欢/不爱按钮
         els.leftAction.style.visibility = 'visible';
