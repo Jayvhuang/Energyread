@@ -891,10 +891,11 @@ async function drawQuote() {
 function resetCheckinState() {
     els.recordArea.style.display = 'block';
     els.textArea.style.display = '';
-    els.completeBtn.style.display = 'none';
+    els.completeBtn.style.display = 'block';  // 默认显示"默念打卡"
     els.submitCheckinBtn.style.display = 'none';
     els.checkinDone.style.display = 'none';
     els.gardenGuideLink.style.display = 'none';
+    els.gardenOptWrap.style.display = 'flex';  // 默认显示传递花园勾选
     els.recordResult.style.display = 'none';
     els.thoughtInput.value = '';
     els.charCount.textContent = '0';
@@ -907,7 +908,6 @@ function resetCheckinState() {
     els.imageUploadBtn.style.display = 'inline-block';
     els.imagePreview.style.display = 'none';
     els.imagePreviewImg.src = '';
-    els.gardenOptWrap.style.display = 'none';
 }
 
 // ===== 打卡 UI 状态 =====
@@ -916,7 +916,7 @@ function updateCheckinUI() {
     const hasImage = currentImageBlob !== null;
     const hasRecord = !!currentRecordingBlob;
 
-    // 有录音或文字或图片，显示"完成打卡"；否则显示"默念打卡"
+    // 有录音或文字或图片 → 完成打卡；否则 → 默念打卡
     if (hasRecord || hasText || hasImage) {
         els.completeBtn.style.display = 'none';
         els.submitCheckinBtn.style.display = 'block';
@@ -926,18 +926,12 @@ function updateCheckinUI() {
         els.submitCheckinBtn.style.display = 'none';
     }
 
-    // 传递到花园：有录音/文字/图片时才显示
-    els.gardenOptWrap.style.display = (hasRecord || hasText || hasImage) ? 'flex' : 'none';
+    // 传递到花园：一直显示
+    els.gardenOptWrap.style.display = 'flex';
 }
 
 // 文字输入变化时更新 UI
 els.thoughtInput.addEventListener('input', updateCheckinUI);
-
-// 重置录音时也要更新 UI
-const _origResetRecBtn = els.reRecordBtn;
-els.reRecordBtn.addEventListener('click', () => {
-    setTimeout(updateCheckinUI, 50);
-});
 
 // ===== 录音功能 =====
 els.recordBtn.addEventListener('click', toggleRecording);
@@ -974,6 +968,7 @@ async function toggleRecording() {
             els.recordBtn.classList.remove('recording');
             els.recordBtn.querySelector('.record-label').textContent = '点击录音';
             stream.getTracks().forEach(t => t.stop());
+            updateCheckinUI();
         };
 
         mediaRecorder.start();
@@ -1005,6 +1000,7 @@ els.reRecordBtn.addEventListener('click', () => {
     currentRecordingBlob = null;
     els.recordResult.style.display = 'none';
     els.recordTimer.textContent = '00:00 / 00:30';
+    updateCheckinUI();
 });
 
 // 保存录音到手机
