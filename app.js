@@ -3123,19 +3123,11 @@ async function deleteWeeklyTheme(id) {
     renderAdminWeekly();
 }
 
-// 清理过期公开区数据（主题切换时清除上周提交）
+// 清理过期公开区数据（调用数据库安全函数，固定东八区，不依赖设备时区）
 async function cleanupWeeklySubmissions() {
     try {
-        const weekStart = getWeekStartAt3AM();
-        const { error } = await sb.from('weekly_submissions')
-            .delete()
-            .lt('created_at', weekStart.toISOString());
+        const { error } = await sb.rpc('cleanup_old_weekly');
         if (error) console.warn('清理周主题公开区失败', error);
-
-        // 同时清理孤儿点赞
-        await sb.from('weekly_likes')
-            .delete()
-            .lt('created_at', weekStart.toISOString());
     } catch (err) {
         console.warn('清理周主题数据失败', err);
     }
