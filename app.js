@@ -641,28 +641,61 @@ const els = {
     adminWeeklySubmissions: document.getElementById('adminWeeklySubmissions')
 };
 
-// ===== 页面导航 =====
-document.querySelectorAll('.nav-item').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const pageId = btn.dataset.page;
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById(pageId).classList.add('active');
-        btn.classList.add('active');
+// ===== 页面导航（hash 路由，支持分享链接直达）=====
+const PAGE_HASH = {
+    'page-home': '',
+    'page-weekly': '#weekly',
+    'page-garden': '#garden',
+    'page-record': '#record'
+};
 
-        if (pageId === 'page-record') renderRecordPage();
-        if (pageId === 'page-garden') renderGarden();
-        if (pageId === 'page-weekly') initWeeklyPage();
-    });
+// 切换页面：统一入口，负责渲染 + 同步地址栏 hash
+function switchPage(pageId, options = {}) {
+    const target = document.getElementById(pageId);
+    if (!target) return;
+
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    target.classList.add('active');
+    const navBtn = document.querySelector(`.nav-item[data-page="${pageId}"]`);
+    if (navBtn) navBtn.classList.add('active');
+
+    if (pageId === 'page-record') renderRecordPage();
+    if (pageId === 'page-garden') renderGarden();
+    if (pageId === 'page-weekly') initWeeklyPage();
+
+    if (options.updateHash !== false) {
+        const hash = PAGE_HASH[pageId] || '';
+        if (location.hash !== hash) {
+            // 用 replaceState 不产生历史堆栈，手机返回键行为保持不变
+            history.replaceState(null, '', location.pathname + location.search + hash);
+        }
+    }
+}
+
+// hash → 页面；未知 hash 回首页
+function pageIdFromHash() {
+    const hash = location.hash;
+    return Object.keys(PAGE_HASH).find(k => PAGE_HASH[k] === hash) || 'page-home';
+}
+
+document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.addEventListener('click', () => switchPage(btn.dataset.page));
+});
+
+// 浏览器前进/后退或手动改 hash
+window.addEventListener('hashchange', () => {
+    const pageId = pageIdFromHash();
+    switchPage(pageId, { updateHash: false });
+    // 无法识别的 hash 清掉，避免地址栏留下无意义片段
+    if (pageId === 'page-home' && location.hash) {
+        history.replaceState(null, '', location.pathname + location.search);
+    }
 });
 
 // 花园引导链接
 els.gardenGuideLink.addEventListener('click', () => {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById('page-garden').classList.add('active');
-    document.querySelector('[data-page="page-garden"]').classList.add('active');
-    renderGarden();
+    switchPage('page-garden');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
@@ -1868,10 +1901,7 @@ els.adminPasswordInput.addEventListener('keydown', (e) => {
 });
 
 els.adminBackBtn.addEventListener('click', () => {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-record').classList.add('active');
-    document.querySelector('[data-page="page-record"]').classList.add('active');
-    renderRecordPage();
+    switchPage('page-record');
 });
 
 // 后台管理标签页切换
@@ -3135,6 +3165,16 @@ async function cleanupWeeklySubmissions() {
 
 async function init() {
     await initSupabase();
+
+    // 先按 hash 打开目标页面（不等后续数据加载，避免慢网络下卡在首页）
+    const initialPage = pageIdFromHash();
+    if (initialPage !== 'page-home') {
+        switchPage(initialPage, { updateHash: false });
+    } else if (location.hash) {
+        // 无意义的 hash 清掉，回到纯首页地址
+        history.replaceState(null, '', location.pathname + location.search);
+    }
+
     await initDB();
     await loadQuotes(); // 从云端拉语句库
     await loadWeeklyThemes(); // 加载周主题
