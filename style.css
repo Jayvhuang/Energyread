@@ -2369,6 +2369,6 @@ html, body {
 /* ===== 周主题：桌面端整页加宽，卡片 / 输入区 / 展示区同一宽度、单列（≥1024px 生效，手机不变）===== */
 @media (min-width: 1024px) {
     #page-weekly.page {
-        max-width: 760px; /* 内容宽 728px（左右各 16px 内边距） */
+        max-width: 712px; /* 内容宽 680px（左右各 16px 内边距） */
     }
 }
