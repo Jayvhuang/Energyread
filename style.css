@@ -2366,25 +2366,9 @@ html, body {
     line-height: 1.6;
 }
 
-/* ===== 周主题：桌面端展示区加宽（仅 ≥1024px 生效，手机不变）===== */
+/* ===== 周主题：桌面端整页加宽，卡片 / 输入区 / 展示区同一宽度、单列（≥1024px 生效，手机不变）===== */
 @media (min-width: 1024px) {
     #page-weekly.page {
-        max-width: 960px;
-    }
-
-    /* 标题卡 + 输入区保持原宽度居中 */
-    #page-weekly .page-header,
-    #page-weekly .weekly-theme-card,
-    #page-weekly .weekly-input-section {
-        max-width: 480px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    /* 展示区占满宽度，改两列 */
-    .weekly-list {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
+        max-width: 760px; /* 内容宽 728px（左右各 16px 内边距） */
     }
 }
