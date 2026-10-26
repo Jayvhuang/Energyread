@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>能量咒语 · 连接诊断</title>
+<style>
+  body { margin:0; padding:16px; font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;
+         background:#0f1220; color:#e8ebf5; font-size:15px; line-height:1.6; }
+  h1 { font-size:18px; margin:8px 0 4px; }
+  .sub { color:#8b93ad; font-size:13px; margin-bottom:14px; }
+  .row { background:#181c2e; border-radius:10px; padding:10px 12px; margin-bottom:8px; }
+  .row .name { font-weight:600; font-size:14px; }
+  .row .val { color:#a9b1c8; font-size:13px; word-break:break-all; margin-top:2px; }
+  .ok .name::before { content:"✅ "; }
+  .bad .name::before { content:"❌ "; }
+  .wait .name::before { content:"⏳ "; }
+  .bad { background:#2a1620; }
+  .bad .val { color:#ffb3c6; }
+  button { width:100%; padding:14px; border:0; border-radius:10px; background:#667eea; color:#fff;
+           font-size:16px; font-weight:600; margin-top:12px; }
+  #summary { font-size:14px; color:#ffd479; margin:10px 0; }
+</style>
+</head>
+<body>
+<h1>能量咒语 · 连接诊断</h1>
+<div class="sub" id="ctx">检测中…</div>
+<div id="summary"></div>
+<div id="log"></div>
+<button id="copyBtn">复制全部结果</button>
+
+<script>
+const SUPABASE_URL = 'https://dcccrxdzokokiqpfakfz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_xBqt3ynwyCDOUotKEJfEUg_S2Qtn_tP';
+const log = document.getElementById('log');
+const results = [];
+
+function add(name, state, val) {
+  const div = document.createElement('div');
+  div.className = 'row ' + state;
+  div.innerHTML = `<div class="name">${name}</div><div class="val">${val}</div>`;
+  log.appendChild(div);
+  results.push(`${state === 'ok' ? 'PASS' : state === 'bad' ? 'FAIL' : 'WAIT'} | ${name} | ${val}`);
+}
+
+async function timed(fn, ms = 8000) {
+  const t0 = performance.now();
+  try {
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), ms);
+    const v = await fn(ac.signal);
+    clearTimeout(timer);
+    return { ok: true, v, ms: Math.round(performance.now() - t0) };
+  } catch (e) {
+    return { ok: false, err: (e && e.name === 'AbortError') ? '超时 ' + ms + 'ms' : (e && e.message || String(e)), ms: Math.round(performance.now() - t0) };
+  }
+}
+
+async function rest(path) {
+  const r = await fetch(SUPABASE_URL + path, {
+    headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+  });
+  const text = await r.text();
+  let count = null;
+  try { const j = JSON.parse(text); count = Array.isArray(j) ? j.length : (j && j.length); } catch (e) {}
+  return { status: r.status, count, body: text.slice(0, 120) };
+}
+
+(async () => {
+  const ua = navigator.userAgent;
+  const conn = navigator.connection ? (navigator.connection.effectiveType || '') : '';
+  document.getElementById('ctx').textContent =
+    `${new Date().toLocaleString()} · 在线:${navigator.onLine ? '是' : '否'} · 网络:${conn || '未知'}`;
+
+  // 1. 页面与静态资源
+  add('页面地址', 'wait', location.href);
+  const app = await timed(s => fetch('app.js', { cache: 'no-store', signal: s }).then(r => r.text().then(t => ({ status: r.status, len: t.length, hasRouter: t.includes('PAGE_HASH') }))));
+  if (app.ok) {
+    const { status, len, hasRouter } = app.v;
+    add('app.js 可加载', status === 200 ? 'ok' : 'bad', `HTTP ${status} · ${len} 字节 · 新版路由:${hasRouter ? '有' : '无（旧缓存）'} · ${app.ms}ms`);
+  } else add('app.js 可加载', 'bad', app.err);
+
+  // 2. 本地存储
+  let lsOk = false;
+  try { localStorage.setItem('__diag', '1'); localStorage.removeItem('__diag'); lsOk = true; } catch (e) {}
+  add('localStorage', lsOk ? 'ok' : 'bad', lsOk ? '可读写' : '被禁用（无痕模式或隐私设置）');
+
+  const idb = await timed(() => new Promise((res, rej) => {
+    // 用独立的临时库测试，绝不碰正式库 LoveMyselfDB
+    const name = '__diag_db_' + Date.now();
+    const req = indexedDB.open(name, 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('t');
+    req.onsuccess = () => { const d = req.result; d.close(); indexedDB.deleteDatabase(name); res('可创建存储'); };
+    req.onerror = () => rej(req.error || new Error('indexedDB 打开失败'));
+    req.onblocked = () => rej(new Error('indexedDB 被阻塞'));
+  }), 5000);
+  add('IndexedDB', idb.ok ? 'ok' : 'bad', idb.ok ? `可用（${idb.v}）· ${idb.ms}ms` : `${idb.err} · ${idb.ms}ms`);
+
+  // 3. CDN（supabase-js 依赖）
+  const cdn = await timed(s => fetch('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm', { signal: s }).then(r => ({ status: r.status })));
+  add('CDN (jsdelivr)', cdn.ok ? (cdn.v.status === 200 ? 'ok' : 'bad') : 'bad',
+      cdn.ok ? `HTTP ${cdn.v.status} · ${cdn.ms}ms` : `打不开：${cdn.err}`);
+
+  const imp = await timed(async () => {
+    const m = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    return typeof m.createClient;
+  });
+  add('supabase-js 模块', imp.ok ? 'ok' : 'bad', imp.ok ? `加载成功（createClient: ${imp.v}）· ${imp.ms}ms` : `${imp.err} · ${imp.ms}ms`);
+
+  // 4. 数据库 REST 接口
+  const q = await timed(() => rest('/rest/v1/quotes?select=id&limit=1'));
+  add('数据库 quotes', q.ok && q.v.status < 400 ? 'ok' : 'bad',
+      q.ok ? `HTTP ${q.v.status} · 返回 ${q.v.count} 条 · ${q.ms}ms ${q.v.status >= 400 ? '· ' + q.v.body : ''}` : `${q.err} · ${q.ms}ms`);
+
+  const g = await timed(() => rest('/rest/v1/garden_items?select=id&limit=1'));
+  add('数据库 garden_items', g.ok && g.v.status < 400 ? 'ok' : 'bad',
+      g.ok ? `HTTP ${g.v.status} · 返回 ${g.v.count} 条 · ${g.ms}ms ${g.v.status >= 400 ? '· ' + g.v.body : ''}` : `${g.err} · ${g.ms}ms`);
+
+  const w = await timed(() => rest('/rest/v1/weekly_themes?select=id&limit=1'));
+  add('数据库 weekly_themes', w.ok && w.v.status < 400 ? 'ok' : 'bad',
+      w.ok ? `HTTP ${w.v.status} · 返回 ${w.v.count} 条 · ${w.ms}ms ${w.v.status >= 400 ? '· ' + w.v.body : ''}` : `${w.err} · ${w.ms}ms`);
+
+  // 5. 汇总
+  const failed = results.filter(r => r.startsWith('FAIL'));
+  document.getElementById('summary').textContent = failed.length
+    ? `发现 ${failed.length} 项异常，详见下方红色条目`
+    : '全部通过：这台设备访问数据库正常';
+
+  results.push('UA | ' + ua);
+})();
+
+document.getElementById('copyBtn').addEventListener('click', async () => {
+  const text = document.getElementById('ctx').textContent + '\n' + results.join('\n');
+  try { await navigator.clipboard.writeText(text); document.getElementById('copyBtn').textContent = '已复制，发给开发者即可'; }
+  catch (e) { document.getElementById('copyBtn').textContent = '复制失败，请截图'; }
+});
+</script>
+</body>
+</html>
