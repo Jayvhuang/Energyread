@@ -2434,27 +2434,39 @@ html, body {
         max-width: 960px;
         margin: 0 auto;
         padding: 0 16px;
-        gap: 12px;
+        gap: 26px;
     }
 
     .nav-brand {
-        display: block;
-        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 1.05rem;
         font-weight: 700;
         color: #333;
         white-space: nowrap;
         letter-spacing: 0.02em;
     }
 
+    .brand-logo {
+        display: block;
+        width: 26px;
+        height: 26px;
+    }
+
     .nav-tabs {
         flex: 0 1 auto;
-        margin-left: auto;
+        margin-left: 0;
     }
 
     .nav-item {
         flex: none;
-        padding: 0 16px;
+        padding: 0 14px;
         font-size: 0.85rem;
+    }
+
+    .theme-picker {
+        margin-left: auto;
     }
 
     .theme-toggle {
