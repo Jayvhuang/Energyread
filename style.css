@@ -2431,9 +2431,9 @@ html, body {
 /* ===== 顶部导航：桌面端（品牌在左，菜单右对齐，四个色点平铺）===== */
 @media (min-width: 1024px) {
     .nav-inner {
-        max-width: 960px;
-        margin: 0 auto;
-        padding: 0 16px;
+        max-width: none;
+        margin: 0;
+        padding: 0 40px;
         gap: 26px;
     }
 
