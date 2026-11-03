@@ -664,6 +664,9 @@ function switchPage(pageId, options = {}) {
     if (pageId === 'page-garden') renderGarden();
     if (pageId === 'page-weekly') initWeeklyPage();
 
+    // 切页后回到页面顶部
+    window.scrollTo(0, 0);
+
     if (options.updateHash !== false) {
         const hash = PAGE_HASH[pageId] || '';
         if (location.hash !== hash) {
@@ -2372,7 +2375,24 @@ function applyTheme(theme) {
 if (els.themeOptions) {
     els.themeOptions.addEventListener('click', (e) => {
         const dot = e.target.closest('.theme-dot');
-        if (dot) applyTheme(dot.dataset.theme);
+        if (dot) {
+            applyTheme(dot.dataset.theme);
+            els.themeOptions.classList.remove('open');
+        }
+    });
+}
+
+// 手机端：颜色按钮展开 / 收起（电脑端按钮隐藏，四个色点直接平铺）
+const themeToggle = document.getElementById('themeToggle');
+if (themeToggle && els.themeOptions) {
+    themeToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        els.themeOptions.classList.toggle('open');
+    });
+    document.addEventListener('click', (e) => {
+        if (!els.themeOptions.contains(e.target)) {
+            els.themeOptions.classList.remove('open');
+        }
     });
 }
 
@@ -2561,7 +2581,7 @@ async function initWeeklyPage() {
     if (weeklyThemes.length === 0) {
         els.weeklyThemeTitle.textContent = '暂无主题';
         els.weeklyThemeDesc.textContent = '';
-        els.weeklyList.innerHTML = '<div class="empty-garden">还没有周主题</div>';
+        els.weeklyList.innerHTML = '<div class="empty-garden">还没有能量主题</div>';
         return;
     }
 
@@ -2791,7 +2811,7 @@ els.weeklySubmitBtn.addEventListener('click', async () => {
             // 同步推送到能量花园
             const theme = weeklyThemes.find(t => t.id === currentThemeId);
             const gardenData = {
-                quote_text: theme ? theme.title : '周主题',
+                quote_text: theme ? theme.title : '能量主题',
                 type: audioUrl ? 'voice' : 'text',
                 content: content
             };
@@ -2879,7 +2899,7 @@ els.saveWeeklyCardBtn.addEventListener('click', async () => {
         const url = canvas.toDataURL('image/png');
         const a = document.createElement('a');
         a.href = url;
-        a.download = `周主题_${new Date().toISOString().slice(0, 10)}.png`;
+        a.download = `能量主题_${new Date().toISOString().slice(0, 10)}.png`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -2898,7 +2918,7 @@ async function renderMyWeeklyHistory() {
     els.myWeeklyList.innerHTML = '';
 
     if (records.length === 0) {
-        els.myWeeklyList.innerHTML = '<div class="history-item"><div class="history-quote" style="color:#999;">周主题记录会在这里显示</div></div>';
+        els.myWeeklyList.innerHTML = '<div class="history-item"><div class="history-quote" style="color:#999;">能量主题记录会在这里显示</div></div>';
         return;
     }
 
