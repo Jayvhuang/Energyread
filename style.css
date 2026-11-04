@@ -2450,8 +2450,8 @@ html, body {
 
     .brand-logo {
         display: block;
-        width: 26px;
-        height: 26px;
+        width: 32px;
+        height: auto;
     }
 
     .nav-tabs {
