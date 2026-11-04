@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>能量星球 · 每日朗读</title>
     <link rel="icon" type="image/png" href="logo.png">
-    <link rel="stylesheet" href="style.css?v=50">
+    <link rel="stylesheet" href="style.css?v=51">
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
@@ -19,6 +19,7 @@
             <div class="nav-tabs">
                 <button class="nav-item active" data-page="page-home">能量咒语</button>
                 <button class="nav-item" data-page="page-weekly">能量探索</button>
+                <button class="nav-item" data-page="page-story">能量故事</button>
                 <button class="nav-item" data-page="page-garden">能量花园</button>
                 <button class="nav-item" data-page="page-record">我的</button>
             </div>
@@ -133,6 +134,16 @@
         <div class="today-count" id="todayCount" style="display:none;">
             今天有 <span id="countNum">0</span> 人也在朗读能量咒语
         </div>
+    </div>
+
+    <!-- 能量故事 -->
+    <div class="page" id="page-story">
+        <div class="page-header">
+            <h2>能量故事</h2>
+            <p class="page-subtitle">看见别人的活法，照见自己的可能</p>
+        </div>
+        <div class="story-list" id="storyList"></div>
+        <div class="garden-note">视频来自哔哩哔哩，版权归原作者所有</div>
     </div>
 
     <!-- 今日能量花园 -->
@@ -463,6 +474,7 @@
         </div>
     </div>
 
-    <script src="app.js?v=53"></script>
+    <script src="stories.js?v=1"></script>
+    <script src="app.js?v=54"></script>
 </body>
 </html>
