@@ -2524,11 +2524,85 @@ html, body {
     }
 }
 
-/* ===== 抽能量 / 能量花园 / 我的：仅电脑端卡片宽度 480 → 600（手机、平板不变）===== */
+/* ===== 抽能量 / 能量花园 / 我的 / 能量故事：仅电脑端卡片宽度 480 → 600（手机、平板不变）===== */
 @media (min-width: 1024px) {
     #page-home.page,
     #page-garden.page,
-    #page-record.page {
+    #page-record.page,
+    #page-story.page {
         max-width: 632px; /* 内容宽 600px（左右各 16px 内边距） */
     }
+}
+
+/* ===== 能量故事 ===== */
+.story-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.story-card {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+}
+
+.story-video {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #1b1b22;
+}
+
+.story-video iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+.story-body {
+    padding: 14px 16px 12px;
+}
+
+.story-title {
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: #333;
+    line-height: 1.45;
+}
+
+.story-summary {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    line-height: 1.75;
+    color: #666;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.story-summary.expanded {
+    display: block;
+    overflow: visible;
+    -webkit-line-clamp: unset;
+}
+
+.story-more {
+    margin-top: 6px;
+    padding: 0;
+    background: none;
+    border: none;
+    color: #ff69b4;
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.story-src {
+    margin-top: 8px;
+    font-size: 0.75rem;
+    color: #aaa;
 }
