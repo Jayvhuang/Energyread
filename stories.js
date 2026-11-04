@@ -62,7 +62,7 @@ function renderStories() {
         });
     });
 
-    // 简介不足三行时不需要“展开”按钮（等排版稳定后再量）
+    // 简介不足两行时不需要“展开”按钮（等排版稳定后再量）
     requestAnimationFrame(() => {
         list.querySelectorAll('.story-summary').forEach(p => {
             if (p.scrollHeight <= p.clientHeight + 2) {
