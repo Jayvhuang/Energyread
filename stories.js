@@ -6,6 +6,16 @@
 
 const STORIES = [
     {
+        bvid: 'BV13xh566EXK',
+        title: '敏亨：活一年，抵别人活十年',
+        summary: '探访者在高温荒山偶遇戴面具、光身晒太阳的敏亨，跟着他走进崖壁下的山洞居所。敏亨带2万元进山，土地是换的，房子一砖一瓦自己盖，月花销两三百元，除了买必需品几乎不下山。他晒太阳能晒到烈阳下，夜深就打坐，闲时弹古琴，还帮山里老人修手机、顺手清路障。隐居前他做过26种工作、创业十次、搬过64次家，被不少人骂“躺平的废物”。他却说：普通人一年最多一个月属于自己，我360天都属于自己，活一年抵你活十年。墙上写着“别用独一无二的灵魂去过千篇一律的人生”。'
+    },
+    {
+        bvid: 'BV1U2L56wEsE',
+        title: '葛俊逸：把长板拉到足够闪耀',
+        summary: '葛俊逸，5 岁学舞，进专业院校第一天就当主演，如今是公狗剧场的创始人。他把全男现代舞团当成一门生意来做：2025 年演了 600 场，2026 年要冲到 1300 场，目标是做中国男性艺术领域的第一，比肩百老汇。他的理念很硬：好作品得卖到 1000 万，只卖 10 块就是没价值；创业要把长板拉到足够闪耀，短板不用管；管理用一言堂，只招应届生，薪资一个个谈，不搞大锅饭。他要让舞者买得起房和车，让整个行业看到跳舞也能过上好日子。他自认最好的情绪价值是日进斗金，自信靠一次次拿到结果垒出来。'
+    },
+    {
         bvid: 'BV1CfKo6DEYv',
         title: '王潮歌：先成为自己，再成为别的',
         summary: '王潮歌，中国最具创造力的导演之一。她身上最动人的是那股不按别人规则活的劲。她说大多数人擅长观察别人，却从没认真研究过自己，而这是被忽视的顶级能力；女性在成为妻子、母亲之前，先得是自己。她把天赋的定义放宽：做饭好吃、情绪稳定、让人愿意亲近，都算天赋，不必换成钱。她不信原生家庭那套归因，只讲“不看来处、只看去处”。'
@@ -46,8 +56,10 @@ function renderStories() {
             <div class="story-body">
                 <h3 class="story-title">${escapeStoryText(item.title)}</h3>
                 <p class="story-summary">${escapeStoryText(item.summary)}</p>
-                <button class="story-more" type="button">展开</button>
-                <p class="story-src">哔哩哔哩 · 转载</p>
+                <div class="story-meta">
+                    <span class="story-src">哔哩哔哩 · 转载</span>
+                    <button class="story-more" type="button">展开</button>
+                </div>
             </div>
         </article>
     `).join('');
@@ -56,7 +68,9 @@ function renderStories() {
 
     list.querySelectorAll('.story-more').forEach(btn => {
         btn.addEventListener('click', () => {
-            const summary = btn.previousElementSibling;
+            const card = btn.closest('.story-card');
+            const summary = card && card.querySelector('.story-summary');
+            if (!summary) return;
             const expanded = summary.classList.toggle('expanded');
             btn.textContent = expanded ? '收起' : '展开';
         });
@@ -66,8 +80,8 @@ function renderStories() {
     requestAnimationFrame(() => {
         list.querySelectorAll('.story-summary').forEach(p => {
             if (p.scrollHeight <= p.clientHeight + 2) {
-                const btn = p.nextElementSibling;
-                if (btn && btn.classList.contains('story-more')) btn.style.display = 'none';
+                const btn = p.closest('.story-card').querySelector('.story-more');
+                if (btn) btn.style.display = 'none';
             }
         });
     });
