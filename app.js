@@ -645,6 +645,7 @@ const els = {
 const PAGE_HASH = {
     'page-home': '',
     'page-weekly': '#weekly',
+    'page-story': '#story',
     'page-garden': '#garden',
     'page-record': '#record'
 };
@@ -663,6 +664,7 @@ function switchPage(pageId, options = {}) {
     if (pageId === 'page-record') renderRecordPage();
     if (pageId === 'page-garden') renderGarden();
     if (pageId === 'page-weekly') initWeeklyPage();
+    if (pageId === 'page-story' && typeof renderStories === 'function') renderStories();
 
     // 切页后回到页面顶部
     window.scrollTo(0, 0);
