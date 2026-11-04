@@ -2483,3 +2483,11 @@ html, body {
         box-shadow: none;
     }
 }
+
+/* ===== 抽能量 / 能量花园：桌面端卡片加宽到 600px（手机与平板不变）===== */
+@media (min-width: 1024px) {
+    #page-home.page,
+    #page-garden.page {
+        max-width: 632px; /* 内容宽 600px（左右各 16px 内边距） */
+    }
+}
