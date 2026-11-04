@@ -2484,8 +2484,8 @@ html, body {
     }
 }
 
-/* ===== 抽能量 / 能量花园：卡片宽度从 480 改为 600（手机竖屏仍占满屏宽）===== */
-@media (min-width: 480px) {
+/* ===== 抽能量 / 能量花园：仅电脑端卡片宽度 480 → 600（手机、平板不变）===== */
+@media (min-width: 1024px) {
     #page-home.page,
     #page-garden.page {
         max-width: 632px; /* 内容宽 600px（左右各 16px 内边距） */
