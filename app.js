@@ -2581,7 +2581,7 @@ async function initWeeklyPage() {
     if (weeklyThemes.length === 0) {
         els.weeklyThemeTitle.textContent = '暂无主题';
         els.weeklyThemeDesc.textContent = '';
-        els.weeklyList.innerHTML = '<div class="empty-garden">还没有能量主题</div>';
+        els.weeklyList.innerHTML = '<div class="empty-garden">还没有探索主题</div>';
         return;
     }
 
@@ -2811,7 +2811,7 @@ els.weeklySubmitBtn.addEventListener('click', async () => {
             // 同步推送到能量花园
             const theme = weeklyThemes.find(t => t.id === currentThemeId);
             const gardenData = {
-                quote_text: theme ? theme.title : '能量主题',
+                quote_text: theme ? theme.title : '能量探索',
                 type: audioUrl ? 'voice' : 'text',
                 content: content
             };
@@ -2899,7 +2899,7 @@ els.saveWeeklyCardBtn.addEventListener('click', async () => {
         const url = canvas.toDataURL('image/png');
         const a = document.createElement('a');
         a.href = url;
-        a.download = `能量主题_${new Date().toISOString().slice(0, 10)}.png`;
+        a.download = `能量探索_${new Date().toISOString().slice(0, 10)}.png`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -2918,7 +2918,7 @@ async function renderMyWeeklyHistory() {
     els.myWeeklyList.innerHTML = '';
 
     if (records.length === 0) {
-        els.myWeeklyList.innerHTML = '<div class="history-item"><div class="history-quote" style="color:#999;">能量主题记录会在这里显示</div></div>';
+        els.myWeeklyList.innerHTML = '<div class="history-item"><div class="history-quote" style="color:#999;">探索记录会在这里显示</div></div>';
         return;
     }
 
