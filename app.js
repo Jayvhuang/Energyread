@@ -655,6 +655,16 @@ function switchPage(pageId, options = {}) {
     const target = document.getElementById(pageId);
     if (!target) return;
 
+    // 离开「能量故事」时清空播放器，避免视频在后台继续出声
+    const storyPage = document.getElementById('page-story');
+    if (storyPage && pageId !== 'page-story' && storyPage.classList.contains('active')) {
+        const list = document.getElementById('storyList');
+        if (list) {
+            list.innerHTML = '';
+            delete list.dataset.rendered;
+        }
+    }
+
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     target.classList.add('active');
