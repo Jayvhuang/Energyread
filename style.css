@@ -2590,8 +2590,16 @@ html, body {
     -webkit-line-clamp: unset;
 }
 
+.story-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 8px;
+}
+
 .story-more {
-    margin-top: 6px;
+    margin: 0;
     padding: 0;
     background: none;
     border: none;
@@ -2602,7 +2610,7 @@ html, body {
 }
 
 .story-src {
-    margin-top: 8px;
+    margin: 0;
     font-size: 0.75rem;
     color: #aaa;
 }
