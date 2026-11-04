@@ -18,7 +18,7 @@
             </span>
             <div class="nav-tabs">
                 <button class="nav-item active" data-page="page-home">能量咒语</button>
-                <button class="nav-item" data-page="page-weekly">能量主题</button>
+                <button class="nav-item" data-page="page-weekly">能量探索</button>
                 <button class="nav-item" data-page="page-garden">能量花园</button>
                 <button class="nav-item" data-page="page-record">我的</button>
             </div>
@@ -150,7 +150,7 @@
     <!-- 周主题 -->
     <div class="page" id="page-weekly">
         <div class="page-header">
-            <p class="page-subtitle">本周的能量主题是</p>
+            <p class="page-subtitle">本周的探索主题是</p>
             <h2 id="weeklyThemeTitle"></h2>
         </div>
         <div class="weekly-theme-card" id="weeklyThemeCard">
@@ -227,7 +227,7 @@
         </div>
 
         <div class="history-section">
-            <h3>我的能量主题记录 <span style="font-size:0.75rem;color:#999;font-weight:normal;">· 最多15条</span></h3>
+            <h3>我的探索记录 <span style="font-size:0.75rem;color:#999;font-weight:normal;">· 最多15条</span></h3>
             <div class="history-list" id="myWeeklyList"></div>
         </div>
 
@@ -267,7 +267,7 @@
         <div class="admin-tabs">
             <button class="admin-tab active" data-tab="quotes">语句管理</button>
             <button class="admin-tab" data-tab="garden">能量花园管理</button>
-            <button class="admin-tab" data-tab="weekly">能量主题管理</button>
+            <button class="admin-tab" data-tab="weekly">探索管理</button>
         </div>
 
         <!-- 语句管理 -->
@@ -322,7 +322,7 @@
         <!-- 周主题管理 -->
         <div class="admin-tab-content" id="adminTabWeekly">
             <div class="admin-panel">
-                <h3>新增能量主题</h3>
+                <h3>新增探索主题</h3>
                 <input class="admin-input" id="weeklyThemeTitleInput" placeholder="主题标题（如：我是……）" maxlength="50" style="margin-bottom:8px;">
                 <textarea class="admin-input" id="weeklyThemeDescInput" placeholder="描述文案、规则要求、示例……" style="min-height:100px;"></textarea>
                 <input class="admin-input" id="weeklyThemePlaceholderInput" placeholder="输入框占位符（如：我是……）" maxlength="50" style="margin-top:8px;">
@@ -379,14 +379,14 @@
     <div class="modal" id="weeklyShareModal" style="display:none;">
         <div class="modal-overlay" id="weeklyShareOverlay"></div>
         <div class="modal-content">
-            <h3 class="modal-title">分享能量主题</h3>
+            <h3 class="modal-title">分享能量探索</h3>
             <div class="share-card" id="weeklyShareCard">
                 <div class="share-card-inner">
                     <p class="share-card-quote" id="weeklyShareCardTitle"></p>
                     <div class="share-card-desc" id="weeklyShareCardDesc"></div>
                     <div class="share-card-meta">
                         <div class="share-card-info">
-                            <p class="share-card-footer">能量星球 · 能量主题</p>
+                            <p class="share-card-footer">能量星球 · 能量探索</p>
                         </div>
                         <div class="share-card-source-wrap">
                             <p class="share-card-source-link">www.energyword.com</p>
@@ -405,7 +405,7 @@
     <div class="modal" id="weeklyShareModal" style="display:none;">
         <div class="modal-overlay" id="weeklyShareOverlay"></div>
         <div class="modal-content">
-            <h3 class="modal-title">分享能量主题</h3>
+            <h3 class="modal-title">分享能量探索</h3>
             <div class="weekly-share-card" id="weeklyShareCard">
                 <div class="weekly-share-card-inner">
                     <p class="weekly-share-card-title" id="weeklyShareCardTitle"></p>
@@ -452,7 +452,7 @@
     <div class="modal" id="weeklyEditModal" style="display:none;">
         <div class="modal-overlay" id="weeklyEditOverlay"></div>
         <div class="modal-content" style="max-width:400px;">
-            <h3 class="modal-title">编辑能量主题</h3>
+            <h3 class="modal-title">编辑探索主题</h3>
             <input class="admin-input" id="editWeeklyTitle" placeholder="主题标题" maxlength="50" style="margin-bottom:8px;">
             <textarea class="admin-input" id="editWeeklyDesc" placeholder="描述文案、规则要求、示例……" style="min-height:120px;"></textarea>
             <input class="admin-input" id="editWeeklyPlaceholder" placeholder="输入框占位符" maxlength="50" style="margin-top:8px;">
@@ -463,6 +463,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=52"></script>
+    <script src="app.js?v=53"></script>
 </body>
 </html>
