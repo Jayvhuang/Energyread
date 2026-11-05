@@ -1369,23 +1369,9 @@ async function saveShareCard() {
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
         if (isMobile) {
-            // 移动端：在新窗口打开图片，让用户长按保存
-            const newWindow = window.open('');
-            if (newWindow) {
-                newWindow.document.write(`
-                    <html>
-                    <head><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-                    <body style="margin:0;padding:20px;background:#f5f5f5;text-align:center;">
-                        <img src="${dataUrl}" style="max-width:100%;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);">
-                        <p style="color:#666;font-size:14px;margin-top:16px;font-family:sans-serif;">长按图片保存到相册</p>
-                    </body>
-                    </html>
-                `);
-                els.saveCardBtn.textContent = '✅ 已打开';
-            } else {
-                // 弹窗被阻止，尝试直接下载
-                downloadImage(dataUrl);
-            }
+            // 手机端：当前页面弹出图片，长按保存（Safari / 微信不支持直接下载文件）
+            showImagePreview(dataUrl);
+            els.saveCardBtn.textContent = '✅ 长按图片保存';
         } else {
             // 桌面端：直接下载
             downloadImage(dataUrl);
@@ -1408,6 +1394,26 @@ function downloadImage(dataUrl) {
     document.body.removeChild(link);
     els.saveCardBtn.textContent = '✅ 已保存';
 }
+
+// 手机端：弹出图片让用户长按保存
+function showImagePreview(dataUrl) {
+    const box = document.getElementById('imgPreview');
+    const img = document.getElementById('imgPreviewImg');
+    if (!box || !img) return;
+    img.src = dataUrl;
+    box.classList.add('show');
+}
+
+(function bindImagePreview() {
+    const box = document.getElementById('imgPreview');
+    const closeBtn = document.getElementById('imgPreviewClose');
+    if (!box || !closeBtn) return;
+    closeBtn.addEventListener('click', () => box.classList.remove('show'));
+    box.addEventListener('click', (e) => {
+        // 点背景关闭；点图片本身不关，避免影响长按保存
+        if (e.target === box) box.classList.remove('show');
+    });
+})();
 
 // ===== 今日能量花园 =====
 async function renderGarden() {
@@ -2909,16 +2915,28 @@ els.saveWeeklyCardBtn.addEventListener('click', async () => {
             useCORS: true
         });
         const url = canvas.toDataURL('image/png');
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `能量探索_${new Date().toISOString().slice(0, 10)}.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+        if (isMobile) {
+            // 手机端：弹出图片长按保存（Safari / 微信不支持直接下载）
+            showImagePreview(url);
+            els.saveWeeklyCardBtn.textContent = '✅ 长按图片保存';
+        } else {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `能量探索_${new Date().toISOString().slice(0, 10)}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        setTimeout(() => {
+            els.saveWeeklyCardBtn.textContent = '💾 保存图片';
+            els.saveWeeklyCardBtn.disabled = false;
+        }, 1500);
     } catch (err) {
         alert('生成图片失败，请重试');
         console.error(err);
-    } finally {
         els.saveWeeklyCardBtn.textContent = '💾 保存图片';
         els.saveWeeklyCardBtn.disabled = false;
     }
