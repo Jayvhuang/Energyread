@@ -365,17 +365,44 @@ async function uploadAudioToCloud(blob, id) {
     }
 }
 
+// 花园保留规则：纯文字记录 100 天；带图片或录音的记录 72 小时
+const GARDEN_TEXT_DAYS = 100;
+const GARDEN_MEDIA_HOURS = 72;
+
 async function fetchCloudGarden() {
-    const { data, error } = await sb
+    const now = Date.now();
+    const recentCutoff = new Date(now - GARDEN_MEDIA_HOURS * 60 * 60 * 1000).toISOString();
+    const textCutoff = new Date(now - GARDEN_TEXT_DAYS * 24 * 60 * 60 * 1000).toISOString();
+    const fields = 'id, quote_text, type, content, audio_url, image_url, created_at';
+
+    // 1) 最近 72 小时的全部记录
+    const recent = await sb
         .from('garden_items')
-        .select('id, quote_text, type, content, audio_url, image_url, created_at')
-        .gt('created_at', new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString())
+        .select(fields)
+        .gt('created_at', recentCutoff)
         .order('created_at', { ascending: false });
-    if (error) {
-        console.warn('加载能量花园失败', error);
+
+    // 2) 72 小时之前、100 天以内的纯文字记录
+    const olderText = await sb
+        .from('garden_items')
+        .select(fields)
+        .lte('created_at', recentCutoff)
+        .gt('created_at', textCutoff)
+        .is('audio_url', null)
+        .is('image_url', null)
+        .order('created_at', { ascending: false });
+
+    if (recent.error) {
+        console.warn('加载能量花园失败', recent.error);
         return [];
     }
-    return data || [];
+    if (olderText.error) {
+        console.warn('加载花园文字记录失败', olderText.error);
+    }
+
+    const merged = [...(recent.data || []), ...(olderText.data || [])];
+    merged.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    return merged;
 }
 
 // ===== 能量花园评论 =====
@@ -1423,7 +1450,7 @@ async function renderGarden() {
     els.gardenList.innerHTML = '';
 
     if (items.length === 0) {
-        els.gardenList.innerHTML = '<div class="empty-garden">最近72小时还没有人发布能量，来做第一个吧！</div>';
+        els.gardenList.innerHTML = '<div class="empty-garden">还没有人发布能量，来做第一个吧！</div>';
         return;
     }
 
@@ -2266,7 +2293,7 @@ async function renderAdminGarden() {
     els.adminGardenCount.textContent = `${items.length} 条`;
 
     if (items.length === 0) {
-        els.adminGardenList.innerHTML = '<div class="empty-garden" style="padding:20px;text-align:center;color:#999;">最近72小时没有花园记录</div>';
+        els.adminGardenList.innerHTML = '<div class="empty-garden" style="padding:20px;text-align:center;color:#999;">没有花园记录</div>';
         return;
     }
 
@@ -2458,18 +2485,28 @@ async function cleanupOldData() {
     // 能量花园现在在云端，按 created_at 过滤，无需本地清理
 }
 
-// ===== 云端过期数据物理清理（72小时）=====
+// ===== 云端过期数据物理清理（文字 100 天 / 带媒体 72 小时）=====
 async function cleanupCloudData() {
-    const cutoff = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
+    const now = Date.now();
+    const mediaCutoff = new Date(now - GARDEN_MEDIA_HOURS * 60 * 60 * 1000);
+    const textCutoff = new Date(now - GARDEN_TEXT_DAYS * 24 * 60 * 60 * 1000);
     try {
-        // 查出要删除的旧花园记录 ID
+        // 查出 72 小时之前的记录，再按是否有图片/录音分流
         const { data: oldItems } = await sb
             .from('garden_items')
-            .select('id, audio_url, image_url')
-            .lt('created_at', cutoff);
+            .select('id, audio_url, image_url, created_at')
+            .lt('created_at', mediaCutoff.toISOString());
         if (!oldItems || oldItems.length === 0) return;
 
-        const oldIds = oldItems.map(i => i.id);
+        // 带图片/录音的到 72 小时就删；纯文字的留到 100 天
+        const toDelete = oldItems.filter(i => {
+            const createdTime = new Date(i.created_at).getTime();
+            const hasMedia = !!(i.audio_url || i.image_url);
+            return hasMedia || createdTime < textCutoff.getTime();
+        });
+        if (toDelete.length === 0) return;
+
+        const oldIds = toDelete.map(i => i.id);
 
         // 查出这些花园记录下的评论音频
         const { data: oldComments } = await sb
@@ -2480,7 +2517,7 @@ async function cleanupCloudData() {
 
         // 收集所有要删除的音频文件路径
         const allPaths = [];
-        oldItems.forEach(i => {
+        toDelete.forEach(i => {
             const m = i.audio_url?.match(/\/audio\/(.+)/);
             if (m) allPaths.push(m[1]);
             const img = i.image_url?.match(/\/images\/(.+)/);
