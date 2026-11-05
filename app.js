@@ -2819,8 +2819,9 @@ els.weeklyNameInput.addEventListener('blur', () => {
 // 提交周主题
 els.weeklySubmitBtn.addEventListener('click', async () => {
     const content = els.weeklyTextInput.value.trim();
-    if (!content) {
-        alert('请写下你想说的话');
+    const hasRecording = !!weeklyRecordingBlob;
+    if (!content && !hasRecording) {
+        alert('写下想说的话，或者录一段声音');
         return;
     }
     if (!currentThemeId) {
@@ -2854,21 +2855,24 @@ els.weeklySubmitBtn.addEventListener('click', async () => {
 
         // 如果公开，提交到云端
         if (isPublic) {
-            const { error } = await sb.from('weekly_submissions').insert({
-                theme_id: currentThemeId,
-                device_id: getDeviceId(),
-                author_name: authorName,
-                content: content,
-                audio_url: null  // 公开区不保存语音
-            });
-            if (error) console.warn('提交周主题到公开区失败', error);
+            // 周主题展示区是纯文字版：只有写了文字才进这里
+            if (content) {
+                const { error } = await sb.from('weekly_submissions').insert({
+                    theme_id: currentThemeId,
+                    device_id: getDeviceId(),
+                    author_name: authorName,
+                    content: content,
+                    audio_url: null  // 公开区不保存语音
+                });
+                if (error) console.warn('提交周主题到公开区失败', error);
+            }
 
-            // 同步推送到能量花园
+            // 同步推送到能量花园（文字、语音都推，花园支持播放语音）
             const theme = weeklyThemes.find(t => t.id === currentThemeId);
             const gardenData = {
                 quote_text: theme ? theme.title : '能量探索',
                 type: audioUrl ? 'voice' : 'text',
-                content: content
+                content: content || ''
             };
             if (audioUrl) gardenData.audio_url = audioUrl;
             await sb.from('garden_items').insert(gardenData).then(r => {
@@ -3007,7 +3011,7 @@ async function renderMyWeeklyHistory() {
                 <span class="weekly-history-theme">${escapeHtml(r.themeTitle)}</span>
                 <span class="weekly-history-time">${r.date} ${r.time.slice(0, 5)}</span>
             </div>
-            <div class="weekly-history-content">${escapeHtml(r.content)}</div>
+            <div class="weekly-history-content">${r.content ? escapeHtml(r.content) : '<span style="color:#999;">（语音分享）</span>'}</div>
             ${audioHtml}
         `;
         els.myWeeklyList.appendChild(div);
