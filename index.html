@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>能量星球 · 每日朗读</title>
     <link rel="icon" type="image/png" href="logo.png">
-    <link rel="stylesheet" href="style.css?v=53">
+    <link rel="stylesheet" href="style.css?v=54">
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
@@ -474,7 +474,14 @@
         </div>
     </div>
 
+    <!-- 图片预览（手机端长按保存） -->
+    <div class="img-preview" id="imgPreview">
+        <img id="imgPreviewImg" alt="分享卡片预览">
+        <p class="img-preview-tip">长按图片保存到相册</p>
+        <button class="img-preview-close" id="imgPreviewClose" type="button">关闭</button>
+    </div>
+
     <script src="stories.js?v=5"></script>
-    <script src="app.js?v=55"></script>
+    <script src="app.js?v=56"></script>
 </body>
 </html>
